@@ -7,11 +7,11 @@ The aim of this exemplar is to demonstrate how to design and fit a mathematical 
 ### Prerequisites:
 
 Required:
-•	Experience using R, for instance the Graduate school course *R programming *. 
-•	Knowledge of Bayesian statistics, fr isntance, the textbook *A students guide to Bayesian statistics* by Ben Lambert is a great place to start. Chapter 16 also introduces Stan. 
+- Experience using R, for instance the Graduate school course *R programming*.
+- Knowledge of Bayesian statistics, for instance, the textbook *A students guide to Bayesian statistics* by Ben Lambert is a great place to start. Chapter 16 also introduces Stan. 
 
 Beneficial:
-•	Some familiarity with Stan. 
+- Some familiarity with Stan. 
 
 ### Learning outcomes:
 
@@ -24,12 +24,12 @@ Beneficial:
 
 The project is split into XX sections, with each section introducing a progressibely more comlex infectious disease model. Within each section there are the following modules: 
 
-• Designing an infectious disease model 
-•	Cleaning data in R
-•	Simulating data in R
-•	Model fitting in Rstan
-•	Model diagnostics 
-•	Plotting results in R
+- Designing an infectious disease model
+- Cleaning data in R
+- Simulating data in R
+- Model fitting in Rstan
+- Model diagnostics 
+- Plotting results in R
 
 Excluding the first, each module will contain the following folders:
 
