@@ -38,5 +38,5 @@ Excluding the first, each module will contain the following folders:
 - R (functions)
 - results / figures 
 
-Moreover, each module will be accompanied  by lots of internal and external resources! 
+Moreover, each module will be accompanied  by lots of internal and external learning resources! 
 
