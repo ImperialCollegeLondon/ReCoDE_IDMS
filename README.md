@@ -13,7 +13,7 @@ Required:
 Beneficial:
 •	Some familiarity with Stan. 
 
-### Project learning outcomes:
+### Learning outcomes:
 
 1.	Students will be able to design an infectious disease compartmental model to answer public health questions. 
 2.	Students will gain appreciation of the benefits of using simulated data to debug models.  
