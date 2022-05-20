@@ -35,11 +35,12 @@ ts = 1:length(all_dates)
 
 # model parameters 
 
-R0 = 9.5          # reproduction number 
-sigma = 1 / 5.1   # rate of progression
+R0 = 5     # reproduction number 
+sigma = 1/5.1   # rate of progression
 gamma = 1/2.1     # rate of recovery 
-beta = R0 * gamma # beta, the transmission rate = R0 * gamma 
 rho = 0.2         # reporting probability 
+
+beta =( R0 * gamma )/ (1-rho)    # beta, the transmission rate = R0 / (1-rho) * gamma 
 
 params = c(beta, sigma, gamma,rho)
 
@@ -48,7 +49,7 @@ params = c(beta, sigma, gamma,rho)
 
 n_pop = 15810388 # population of Guateng 
 n_recov = round(n_pop * 0.562) # 56.2% seroprev 
-n_inf = 1 # 1 initial infection 
+n_inf = 1 # 100 initial infection 
 
 initial_state = c(S= n_pop - n_recov - n_inf  , E = 0 , I=n_inf ,Q=0, R=n_recov)
 
@@ -59,7 +60,27 @@ model = ode(initial_state, ts, SEIQR, params)
 
 out.df  = round(as.data.frame(model))
 
-# calculate the reported incidence --------------------------------------------#  
+# plot the model states to check they make sense ------------------------------#  
+
+for(i in 2:ncol(out.df)) plot(out.df[,i])
+
+# as an extra sanity check, lets run the model again with R0 = 1---------------#  
+
+beta_check  =( 1 * gamma )/ (1-rho) 
+
+params_check = c(beta=beta_check, sigma, gamma,rho)
+
+model_check = ode(initial_state, ts, SEIQR, params_check)
+
+# what do we expect to happen?
+
+for(i in 2:ncol(model_check)) plot(model_check[,i])
+
+# as expected, R0 = 1 means that, on average, each infectious person infects 
+# just one more person. This means that the epidemic doesn't take off. 
+
+
+# going back to our simulated epidemic, lets calculate the reported incidence   
 
 # Inc(t) =  rho * sigma * E(t)
 # (i.e., the rate of entry into the Q compartment)
