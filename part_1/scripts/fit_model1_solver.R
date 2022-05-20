@@ -17,6 +17,7 @@ file_path = "part_1/"
 library(rstan)
 library(bayesplot)
 library(loo)
+library(tidyverse)
 rstan_options(auto_write = TRUE)           
 options(mc.cores = parallel::detectCores())
 
@@ -42,7 +43,7 @@ seed_omicron =  which(all_dates == as.Date.character("01-10-2021", format = "%d-
 # we fix the rate of progression and rate of recovery 
 # we estimate beta (transmission rate) and rho (reporting probability)
 
-sigma = 1 / 5.1   # rate of progression
+sigma = 1/5.1   # rate of progression
 gamma = 1/2.1     # rate of recovery 
 
 # population and seropositive populations are known
@@ -62,8 +63,8 @@ pars = c("beta", "rho", "I0")
 stan_data_m1_solv = list(n_days = dim(sim_data)[1], # Number of observations 
                          n_pop = n_pop,
                          n_recov = n_recov,
-                         y = sim_data$rep_inc[seed_omicron:length(ts)],
-                         n_data = length(sim_data$rep_inc[seed_omicron:length(ts)]),
+                         y = sim_data$rep_inc[seed_omicron:dim(sim_data)[1]],
+                         n_data = length(sim_data$rep_inc[seed_omicron:dim(sim_data)[1]]),
                          sigma = sigma,
                          gamma = gamma,
                          ts = sim_data$time, 
@@ -78,19 +79,24 @@ m1_solv = stan_model(paste0(file_path,"models/model1_solver.stan"))
 
 # run our Rstan model ---------------------------------------------------------# 
 
-time.start <- Sys.time()
+
+time.start = Sys.time() # as our model complexity increases, its helpful to keep track on the run time of the model 
 m1_fit_solv = sampling(
   m1_solv,
   data = stan_data_m1_solv,
-  init = ini_1,
   chains=3,
-  warmup=500,
-  iter=1000,
+  warmup=1000,
+  iter=2000,
   thin = 5
 )
-time.end <- Sys.time()
+time.end = Sys.time()
+
+# model run time 
+
 time.end - time.start 
 
+
+# model diagnostics -----------------------------------------------------------# 
 
 # We obtained no warnings about our model, great news! 
 
@@ -113,15 +119,12 @@ mcmc_trace(m1_solv_post, pars="R_0")
 pairs(m1_fit_solv, pars = pars, cex.labels=1.5, font.labels=9, condition = "accept_stat__")  
 
 
-# Kernel density estimates of each Markov chain separately, overlaid
+# overlay densisty estimates obtained for each chain separately 
 mcmc_dens_overlay(m1_solv_post, pars=pars)
 
-#Central posterior uncertainty intervals
-mcmc_intervals(m1_solv_post, pars=pars)
 
 
-
-# Plotting the moedl output against the data ----------------------------------#     
+# Plotting the model output against the data ----------------------------------#     
 
 m1_fit_solv_post = rstan::extract(m1_fit_solv)
 
@@ -136,7 +139,7 @@ plot_m1_solv_results  = m1_fit_solv_post$lambda %>% as.data.frame.table() %>%
     mean = mean(value),
     upper = quantile(value, 0.975)
   )  %>%  
-  mutate(time = seed_omicron : length(ts)) %>% 
+  mutate(time = seed_omicron: dim(sim_data)[1]) %>% 
   left_join(sim_data) %>%  
   ggplot(aes(x = time , y = rep_inc)) +
   geom_point()+
@@ -150,8 +153,6 @@ plot_m1_solv_results  = m1_fit_solv_post$lambda %>% as.data.frame.table() %>%
 
 m1_fit_solv_summary = summary(m1_fit_solv, pars = "pars")$summary
 print(m1_fit_solv_summary,scientific=FALSE,digits=2)
-
-
 
 
 
