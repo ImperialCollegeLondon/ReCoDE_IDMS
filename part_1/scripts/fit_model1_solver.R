@@ -84,8 +84,8 @@ m1_fit_solv = sampling(
   data = stan_data_m1_solv,
   init = ini_1,
   chains=3,
-  warmup=1000,
-  iter=2000,
+  warmup=500,
+  iter=1000,
   thin = 5
 )
 time.end <- Sys.time()

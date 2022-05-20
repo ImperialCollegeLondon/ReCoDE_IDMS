@@ -74,15 +74,13 @@ real[] SIR(real t,    // time
   }
 }
   data {
-  int<lower = 1> n_days;       // number of days observed
-  int<lower = 1> n_recov;     
+  int<lower = 1> n_days;      // number of days observed
+  int<lower = 1> n_recov;     // recovered 
   int<lower = 1> n_pop;       // population 
-
-  int<lower = 1> n_data;        
-  real<lower = 0> sigma; 
-  real<lower = 0> gamma; 
-  
-  int y[n_data];           // data, total number of infected individuals each day
+  int<lower = 1> n_data;      // number of data points to fit to   
+  real<lower = 0> sigma;      // progression rate
+  real<lower = 0> gamma;      // recovery rate
+  int y[n_data];              // data, total number of infected individuals each day
 
   real ts [n_days];
   
@@ -145,7 +143,7 @@ for (t in time_seed_omicron:n_days)
  // priors
   
   beta ~ lognormal(1.5,1);
-  I0 ~ normal(1,100); 
+  I0 ~ normal(1,1000); 
   rho ~ beta(1,1);
 
   }
