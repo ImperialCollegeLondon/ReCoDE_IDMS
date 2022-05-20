@@ -17,24 +17,18 @@
 # - derivatives of all compartments at each time step 
 
 
+
 SEIQR = function(time, current_state, params){
   
   with(as.list(c(current_state, params)),{
+
+    dS <- -(beta*S*I)/S0
+    dE <- (beta*S*I)/S0 - sigma*E
+    dI <- (1-rho)*sigma*E - gamma*I 
+    dQ <- rho * sigma * E - gamma * Q
+    dR <- gamma*(I+Q)
     
-    N = S+I+E+Q+R
-    
-    dS = -(beta*S*I)/N
-    
-    dE = (beta*S*I)/N - sigma * E
-    
-    dI = (1-rho) * sigma * E - gamma*I 
-    
-    dQ = rho * sigma * E - gamma * I 
-    
-    dR = gamma*(I+Q)
-    
-    
-    return(list(c(dS,dE, dI,dQ, dR)))
+    return(list(c(dS, dE, dI,dQ, dR)))
   })
 }
 
@@ -49,6 +43,6 @@ SEIQR = function(time, current_state, params){
 # - starting values for our 3 model parameters, beta, I0, rho 
 
 ini_1 = function(){
-  list(beta=runif(1,2,12),
-       I0 = runif(1,1,1000),
-       rho = runif(1,0,1) )}
+  list(beta=runif(1,2,4),
+       I0 = runif(1,1,50),
+       rho = runif(1,0,.5) )}
