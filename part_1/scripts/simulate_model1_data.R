@@ -1,3 +1,11 @@
+################################################################################
+# This code simulates reported incidence data for the emergence of Omicron in  #
+# Gauteng, South Africa. The code uses DeSolve to solve an SEIQR model,        #
+# described in the README.md filer, under part 1.                              #
+################################################################################
+
+
+
 # set up ----------------------------------------------------------------------#  
 
 rm(list = ls())
