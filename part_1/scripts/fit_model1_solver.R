@@ -51,7 +51,7 @@ gamma = 1/2.1     # rate of recovery
 
 n_pop = 15810388 # population of Guateng 
 n_recov = round(n_pop * 0.562) # 56.2% seropositive  
-g 
+
 
 # parameters to estimate are therfore:
 

@@ -42,17 +42,18 @@ rho = 0.2         # reporting probability
 
 beta =( R0 * gamma )/ (1-rho)    # beta, the transmission rate = R0 / (1-rho) * gamma 
 
-params = c(beta, sigma, gamma,rho)
 
 
 # initial states 
 
 n_pop = 15810388 # population of Guateng 
 n_recov = round(n_pop * 0.562) # 56.2% seroprev 
-n_inf = 1 # 1 initial infection 
+n_inf = 10 # 1 initial infection 
+S0 = n_pop - n_recov # susceptible at time of model fittin
 
-initial_state = c(S= n_pop - n_recov - n_inf  , E = 0 , I=n_inf ,Q=0, R=n_recov)
+initial_state = c(S= S0 - n_inf  , E = 0 , I=n_inf ,Q=0, R=n_recov)
 
+params = c(beta, sigma, gamma,rho,S0)
 
 # Solve the model using deSolve -----------------------------------------------#   
 
@@ -97,3 +98,4 @@ ggplot(sim_data, aes(x= time , y = rep_inc)) +
 # save simulated data ---------------------------------------------------------# 
 
 write.csv(sim_data, paste0(file_path, "data/sim_data.csv"))
+
