@@ -143,7 +143,7 @@ for (t in time_seed_omicron:n_days)
  // priors
   
   beta ~ lognormal(1.5,1);
-  I0 ~ normal(1,1000); 
+  I0 ~ normal(1,50); 
   rho ~ beta(1,1);
 
   }
@@ -151,7 +151,8 @@ for (t in time_seed_omicron:n_days)
   generated quantities {
   
   // basic reproduction number
- 
+
+
   real R_0 = ((1-rho) * beta ) / gamma ; 
 
   // log likelihood 
