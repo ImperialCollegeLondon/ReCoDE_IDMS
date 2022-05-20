@@ -1,14 +1,17 @@
+ 
+ // like with the simulated data, we first need to define a function which solves 
+ // our compartmental model and outputs the derivatives of all compartments at each time step 
+ 
  functions {
-real[] SIR(real t,  // time
+real[] SIR(real t,    // time
   real[] y,           // system state 
   real[] theta,       // parameters 
   real[] x_r,         // real data
-  int [] x_i) {        // integer data
+  int [] x_i) {       // integer data
   
   
   // define integer data // 
 
-  
   int n_recov = x_i[1]; 
   int S0 = x_i[2]; 
   int n_days = x_i[3]; 
@@ -20,11 +23,10 @@ real[] SIR(real t,  // time
   real gamma = x_r[2]; 
   
   
-  // define parameters //
+  // define parameters need to solve model //
   
   real beta = theta[1];
-  real I0   = theta[2];
-  real rho  = theta[3];
+  real rho  = theta[2];
 
   // define compartments // 
   real S;
@@ -42,17 +44,15 @@ real[] SIR(real t,  // time
   real dQ_dt ;
   real dR_dt ;     
   
-  // Force of infection 
+  // define force of infection 
   real FOI;
-  
   
 
 // initial conitions // 
  
  S = y[1]; 
  E = y[2];
-if (t < time_seed_omicron)  I = y[3];
-else I = y[3] + I0;
+ I = y[3];
  Q = y[4]; 
  R = y[5];
 
@@ -64,7 +64,6 @@ else I = y[3] + I0;
   
   // ODE //
   
- 
  dS_dt =  - FOI * S;
  dE_dt =  FOI * S - sigma * E;
  dI_dt =  (1-rho) * sigma * E - gamma * I;
@@ -117,7 +116,7 @@ else I = y[3] + I0;
   real y_hat[n_days,5]; 
   
   // any parameters we want to feed to the solver 
-  real theta[3] = {beta , I0, rho}; 
+  real theta[2] = {beta , rho}; 
   
   // initial conditions for the solver 
   real init[5]  = {S0 - I0,0,  I0, 0,  n_recov };
@@ -128,8 +127,10 @@ else I = y[3] + I0;
   // ODE solver 
   y_hat = integrate_ode_rk45(SIR, init, 0, ts, theta, x_r, x_i); 
   
-  // calculate reported incidence 
-
+  // calculate reported incidence for the time interval we want to fit to 
+  // i.e., we allow for an initial month to seed the model 
+  
+  
 for (t in time_seed_omicron:n_days)
     lambda[(t-time_seed_omicron+1)] = rho * y_hat[t,2] * sigma;
   
@@ -140,8 +141,8 @@ for (t in time_seed_omicron:n_days)
  // likelihood 
  
  target += poisson_lpmf(y | lambda);
-  
- //priors
+   
+ // priors
   
   beta ~ lognormal(1.5,1);
   I0 ~ normal(1,100); 
@@ -151,7 +152,7 @@ for (t in time_seed_omicron:n_days)
   
   generated quantities {
   
-  // Basic reproduction number
+  // basic reproduction number
  
   real R_0 = ((1-rho) * beta ) / gamma ; 
 
@@ -160,7 +161,5 @@ for (t in time_seed_omicron:n_days)
   vector[n_data] log_lik ;
   
   for(i in 1:n_data) log_lik[i] = poisson_lpmf(y[i]| lambda[i]) ;
-  
-
   
   }
