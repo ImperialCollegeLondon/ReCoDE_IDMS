@@ -51,7 +51,7 @@ gamma = 1/2.1     # rate of recovery
 
 n_pop = 15810388 # population of Guateng 
 n_recov = round(n_pop * 0.562) # 56.2% seropositive  
-
+g 
 
 # parameters to estimate are therfore:
 
@@ -79,15 +79,16 @@ m1_solv = stan_model(paste0(file_path,"models/model1_solver.stan"))
 
 # run our Rstan model ---------------------------------------------------------# 
 
-
-time.start = Sys.time() # as our model complexity increases, its helpful to keep track on the run time of the model 
+# as model complexity increases, its helpful to keep track of the model run time  
+time.start = Sys.time() 
 m1_fit_solv = sampling(
   m1_solv,
   data = stan_data_m1_solv,
   chains=3,
   warmup=1000,
   iter=2000,
-  thin = 5
+  init = ini_1,
+  seed = 200522
 )
 time.end = Sys.time()
 
@@ -151,7 +152,7 @@ plot_m1_solv_results  = m1_fit_solv_post$lambda %>% as.data.frame.table() %>%
 
 # summary  of the parameters we are interested in -----------------------------# 
 
-m1_fit_solv_summary = summary(m1_fit_solv, pars = "pars")$summary
+m1_fit_solv_summary = summary(m1_fit_solv, pars = pars)$summary
 print(m1_fit_solv_summary,scientific=FALSE,digits=2)
 
 
