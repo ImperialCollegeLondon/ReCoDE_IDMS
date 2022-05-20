@@ -1,8 +1,10 @@
-##########################################
-# Function used to simulate data 
-##########################################
+################################################################################
+# This script contains function used in part 1                                 #
+################################################################################
 
-# Function to solve SEIQR model
+
+
+# Function to solve SEIQR model -----------------------------------------------#  
 
 # Input: 
 
@@ -35,3 +37,18 @@ SEIQR = function(time, current_state, params){
     return(list(c(dS,dE, dI,dQ, dR)))
   })
 }
+
+
+# Function to generate a plausible range of parameter values ------------------# 
+# for each chain to start at during Rstan model fitting. ----------------------#  
+
+# No input, the function just samples randomly from a range of values
+
+# Output: 
+
+# - starting values for our 3 model parameters, beta, I0, rho 
+
+ini_1 = function(){
+  list(beta=runif(1,2,12),
+       I0 = runif(1,1,1000),
+       rho = runif(1,0,1) )}
