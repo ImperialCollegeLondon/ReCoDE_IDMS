@@ -144,7 +144,7 @@ for (t in time_seed_omicron:n_days)
  //priors
   
   beta ~ lognormal(1.5,1);
-  I0 ~ normal(1,1000); 
+  I0 ~ normal(1,100); 
   rho ~ beta(1,1);
 
   }
