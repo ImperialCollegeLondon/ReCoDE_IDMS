@@ -24,7 +24,9 @@ Beneficial:
 
 The project is split into 2 parts, with each part introducing a progressively more complex infectious disease model. Each part demonstrate how to design an infectious disease model and fit it in Rstan to real data. 
 
-Within each part, you will find the follow folders: 
+#### Part 1 
+
+In part 1, you will find the following folders: 
 
 - scripts
 - R (functions)
