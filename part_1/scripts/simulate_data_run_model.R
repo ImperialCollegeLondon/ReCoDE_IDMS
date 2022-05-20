@@ -1,142 +1,70 @@
+# set up ----------------------------------------------------------------------#  
+
+rm(list = ls())
+file_path = "part_1/"
+
+# load packages and source user defined functions -----------------------------#       
+
 library(deSolve)
-library(dplyr)
-library(rstan)
-library(bayesplot)
-library(loo)
-rstan_options(auto_write = TRUE)           
-options(mc.cores = parallel::detectCores())
+library(tidyverse)
 
-# generate data 
-require(deSolve)
+source(paste0(file_path,"R/model1_functions.R"))
 
-## First model is SEIR model 
+# define global variables -----------------------------------------------------#  
 
-SEIR <- function(time, current_state, params){
-  
-  with(as.list(c(current_state, params)),{
-    N <- S+I+E+R
-    dS <- -(beta*S*I)/N
-    dE <- (beta*S*I)/N - sigma * E
-    dI <- sigma * E - gamma*I 
-    dR <- gamma*I
-    
-    
-    return(list(c(dS,dE, dI, dR)))
-  })
-}
+# start and end data of model fitting 
+start_date =  as.Date.character("01-09-2021", format = "%d-%m-%Y") 
+end_date = as.Date.character("23-02-2022", format = "%d-%m-%Y")
 
-#### We assume an R0 of 9.5 - https://academic.oup.com/jtm/advance-article/doi/10.1093/jtm/taac037/6545354?login=true
-# We assume an incubation period of 5.1 days and an infectious period of 2.1 days
+# sequence of dates of model fitting 
+all_dates = seq.Date(from = start_date, to = end_date ,  by = "days")
 
-R0 = 9.5
+# date to seed omicron 
+seed_omicron =  which(all_dates == as.Date.character("01-10-2021", format = "%d-%m-%Y")) 
 
-# Sigma, the rate of progression from incubation to infectious is tehrefore 1/5.1 days 
-sigma = 1 / 5.1
+# model times 
+ts = 1:length(all_dates)
 
-# gamma, the recovery rate is 1/2.1 days 
-gamma = 1/2.1
+# model parameters 
 
-# Beta, the transmission rate is therefore R0 * gamma 
-beta = R0 * gamma 
+R0 = 9.5          # reproduction number 
+sigma = 1 / 5.1   # rate of progression
+gamma = 1/2.1     # rate of recovery 
+beta = R0 * gamma # beta, the transmission rate = R0 * gamma 
+rho = 0.2         # reporting probability 
 
-params <- c(beta, sigma, gamma)
+params = c(beta, sigma, gamma,rho)
 
 
-# Define our initial states
-N = 15810388 # pop of Guateng 
+# initial states 
 
-# Seroprevalance survery in Guatang prior to 4th wave reported 56.2% immunity - https://www.medrxiv.org/content/10.1101/2021.12.20.21268096v1
+n_pop = 15810388 # population of Guateng 
+n_recov = round(n_pop * 0.562) # 56.2% seroprev 
+n_inf = 1 # 1 initial infection 
 
-R = round(N * 0.562)
-
-
-## Assume 100 initial infections 
-I = 100
-
-initial_state <- c(S= N-R - I  , E = 0 , I=I , R=R)
-
-times <- (1:153) # run in days for Sep-Jan 
+initial_state = c(S= n_pop - n_recov - n_inf  , E = 0 , I=n_inf ,Q=0, R=n_recov)
 
 
-# Solve the model using deSolve 
-model <- ode(initial_state, times, SEIR, params)
+# Solve the model using deSolve -----------------------------------------------#   
 
-out.df<-round(as.data.frame(model))
+model = ode(initial_state, ts, SEIQR, params)
 
-### Incidence is the rate that individuals enter the Infectious compartment 
+out.df  = round(as.data.frame(model))
 
-# Inc(t) = sigma * E(t)
-Inc = data.frame(Time = times,
-                 Inc = round(out.df$E * sigma))
+# calculate the reported incidence --------------------------------------------#  
 
-## plot epidemic curve 
+# Inc(t) =  rho * sigma * E(t)
+# (i.e., the rate of entry into the Q compartment)
 
-ggplot(Inc, aes(x= Time , y = Inc)) +
+sim_data = data.frame(time = ts,
+                      rep_inc = round(rho *out.df$E * sigma))
+
+# plot epidemic curve ---------------------------------------------------------#  
+
+ggplot(sim_data, aes(x= time , y = rep_inc)) +
   geom_point()
 
 
-############  Fit model using Rstan  ############ 
+# save simulated data ---------------------------------------------------------# 
 
-# As the solve in Rstan can be very slow, we will instead estimate the changes in state at each time point at a fine temporal resolution
-
-# As our model in days, we will update our estimate every 2.4 hours 
-
-scale_time_step = 10
-
-
-# Rstan requires the data in a list format 
-data_rstan = list(n_obs = length(times), # Number of observations 
-             n_pop = N,
-             n_recov = R,
-             y = Inc$Inc,
-             scale_time_step = scale_time_step,
-             sigma = sigma/scale_time_step,
-             gamma = gamma/scale_time_step)
-
-
-
-## Here we compile our Rstan model 
-
-m1 <- stan_model( "Omicron_model_1.stan")
-
-## These parameters tell Rstan how many chains we want to run, the number of iterations and how many to discard as burn in
-n_chains=3
-n_warmups=500
-n_iter=5000
-
-set.seed(1234)
-
-# It helps the model to set initial values in a plausible range for each parameter 
-
-# To start, we are going to fix the incubation and infectious period and estimate the initial number of cases and beta
-
-# We think the R0 of Omicron could be between 5.5-12, so plausible starting values for Beta are 2-6
-
-# 1-1000 seems like a reasonable range for the seed 
-
-ini_1 = function(){
-  list(beta=runif(1,2,12),
-       I0 = runif(1,1,1000))}
-
-
-
-time.start <- Sys.time()
-model_fit_1 = sampling(
-  m1,
-  data = data_rstan,
-  init = ini_1,
-  chains = n_chains,
-  warmup = n_warmups,
-  iter = n_iter,
-  seed = 13219
-)
-time.end <- Sys.time()
-time.end - time.start 
-
-model_fit_1_summary <- summary(model_fit_1, pars = c("lp__", "beta", "I0", "R_0"))$summary
-print(model_fit_1_summary,scientific=FALSE,digits=2)
-
-############## WAIC / LOO  ############## 
-
-loo1 <- loo(model_fit_1, save_psis = TRUE)
-
+write.csv(sim_data, paste0(file_path, "data/sim_data.csv"))
