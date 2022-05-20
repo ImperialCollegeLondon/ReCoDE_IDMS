@@ -49,7 +49,7 @@ params = c(beta, sigma, gamma,rho)
 
 n_pop = 15810388 # population of Guateng 
 n_recov = round(n_pop * 0.562) # 56.2% seroprev 
-n_inf = 1 # 100 initial infection 
+n_inf = 1 # 1 initial infection 
 
 initial_state = c(S= n_pop - n_recov - n_inf  , E = 0 , I=n_inf ,Q=0, R=n_recov)
 
