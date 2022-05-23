@@ -74,7 +74,7 @@ stan_data_m1_solv = list(n_days = dim(sim_data)[1], # Number of observations
 
 # compile our Rstan model -----------------------------------------------------# 
 
-m1_solv = stan_model(paste0(file_path,"models/model1_solver.stan"))
+m1_solv = stan_model(paste0(file_path,"models/model1_solverV1.stan"))
 
 
 # run our Rstan model ---------------------------------------------------------# 
