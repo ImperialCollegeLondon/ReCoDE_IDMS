@@ -42,7 +42,8 @@ SEIQR = function(time, current_state, params){
 
 # - starting values for our 3 model parameters, beta, I0, rho 
 
-ini_1 = function(){
-  list(beta=runif(1,2,4),
-       I0 = runif(1,1,50),
-       rho = runif(1,0,.5) )}
+ini_1 = function(seed = 1){
+  set.seed(seed)
+  list(beta=runif(1,1.7,5.2),
+       I0 = runif(1,1,200),
+       rho = runif(1,0,0.5) )}
