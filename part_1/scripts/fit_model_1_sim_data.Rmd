@@ -1,0 +1,335 @@
+---
+title: "Fit model 1 to simulated data"
+author: "Bethan Cracknell Daniels"
+date: "30/05/2022"
+output: html_document
+---
+
+This script fits model 1 to the simulated reported incidence data for the emergence of Omicron in Gauteng, South Africa. Model fitting is done using Rstan. 
+
+Some housekeeping first:
+
+```{r message=FALSE, warning=FALSE}
+rm(list = ls())
+file_path = "Q:/ReCoDE_IDMS/part_1/"
+library(rstan)
+library(bayesplot)
+library(loo)
+library(tidyverse)
+rstan_options(auto_write = TRUE)           
+options(mc.cores = parallel::detectCores())
+
+source(paste0(file_path,"R/model1_functions.R"))
+
+```
+
+## 1. Setting up
+
+Read in simulated data to fit the model to and remind ourselves what the epidemic curve looks like. 
+
+```{r}
+sim_data = read.csv(paste0(file_path, "data/sim_data.csv"))
+ggplot(sim_data, aes(x= time , y = rep_inc)) +
+  geom_point() + 
+  ylab("Reported incidence")
+```
+
+Next, define date variables. See *simulate_model1_data.Rmd* for more details. 
+
+```{r}
+ 
+start_date =  as.Date.character("01-09-2021", format = "%d-%m-%Y") 
+end_date = as.Date.character("23-02-2022", format = "%d-%m-%Y")
+
+all_dates = seq.Date(from = start_date, to = end_date ,  by = "days")
+seed_omicron =  which(all_dates == as.Date.character("01-10-2021", format = "%d-%m-%Y")) 
+```
+
+
+We assume an average incubation period $1/σ$ of 5.1 days [1] and an average infectious period $1/γ$ of 2.1 days [2]. We assume 56.2% of the population have immunity and are in the recovered compartment [3]. 
+
+```{r}
+sigma = 1/5.1   
+gamma = 1/2.1  
+n_pop = 15810388 
+n_recov = round(n_pop * 0.562) 
+
+```
+
+We want to estimate $\beta$ (transmission rate), $\rho$ (reporting probability) and $I0$ (initial number infected).
+ 
+```{r}
+pars = c("beta", "rho", "I0")
+```
+ 
+## 2. Running Stan 
+
+There are two options available to use to solve our ordinary differential equations (ODEs). 
+
+### Method 1: Euler's Method 
+
+
+Euler's Method is the simplest numerical integration method. Consider an infectious disease model, where susceptible individuals are infected at rate $\beta$ but never recover! 
+
+
+ $\frac{dS}{dt} = - \beta S \frac{I}{N}$ 
+ 
+ $\frac{dI}{dt} =  \beta S \frac{I}{N}$ 
+ 
+To solve this, the Euler's Method calculates the change in compartment during time interval $t$ and predicts the next state at time $t+1$:
+
+$S_{t+1} = S_t - \beta S_t \frac{I_t}{N}$
+
+$I_{t+1} = I_t + \beta S_t \frac{I_t}{N}$
+
+Assume we have a population $N=100$ and a transmission rate of $ \beta = 1$. The initial conditions are: $I_0 = 1$ and $S_0 = 99$. 
+
+At $t_1$, we can calculate our states as: 
+
+$S_{t1} = 99 - 1 . 99 . \frac{1}{100}  =  98.01$ 
+
+
+$I_{t1} = 1 + 1 . 99 . \frac{1}{100} = 1.99$
+
+At $t_2$, we can calculate our states as: 
+
+$S_{t1} = 98.01 - 1 . 98.01 . \frac{1.99}{100} = 96.06$ 
+
+$I_{t1} = 1.99 + 1 . 99 . \frac{1.99}{100} = 3.94$
+
+And so on... 
+
+
+To solver our ODEs in Stan using this method, we can simply use a for loop to solve the equations at each time step and predict the state at the next time step.
+
+This method is simple, but its accuracy depends on the time step used. Smaller time steps will get closer to the exact solution. For instance, when fitting a model over the course of a year, day intervals are likely sufficient. If fitting a model over days, then hours would be a more appropriate interval. A benefit of using simulated data, as we will see, is that we can check that our time step is sufficiently small to obtain an accurate approximation of the solution. Depending on the required level of accuracy, the time step needed to obtain an acceptable approximation may be so small as to be computationally expensive. In this instance, higher order methods are used such as the  [Runge-Kutta Method](#RKM)
+
+#### Fit the model 
+
+Next step is to run the Stan model. First, we create a list of all data needed for model formatting. Then compile the model. 
+
+```{r warning=FALSE}
+stan_data_m1_euler = list(n_ts = length(all_dates), # Number of observations 
+                         n_pop = n_pop,          
+                         n_recov = n_recov,           
+                         y = sim_data$rep_inc,     # Data to fit
+                         n_data = length(sim_data$rep_inc), # Number of data points to fit 
+                         sigma = sigma,
+                         gamma = gamma,
+                         time_seed_omicron = seed_omicron)
+
+
+m1_euler = stan_model(paste0(file_path,"models/model1_Euler_V1.stan"))
+```
+The MCMC algorithm needs starting points for each chain. If no initial values are given, Stan will randomly generate values betwen -2 and 2. On the other hand, setting initial values that are likely under the posterior distribution can help model convergence, especially as model complexity increases (including non-linear systems of ODEs). 
+
+We want the initial values to be different, so we can see that the chains are converging, however we also want them to within a plausible range. To do this, we create a function called *ini_1* which randomly draws a sample from a unifrom distribution, whose bounds cover a reasonable range of expected parameter values. You can check the function and the bounds below. If we don't set the seed, it will be 1 and we will always obtain the same initial values. 
+
+```{r}
+ini_1
+
+ini_1()
+```
+Instead, we create a list of values using different seeds, so we have 3 different starting values for each chain. 
+```{r}
+list_of_inits = list(
+  ini_1(seed = 21),
+  ini_1(seed = 05),
+  ini_1(seed = 22)
+)
+```
+ 
+Now we are ready to run the model. Note, we can check the run time of the model which is helpful when they become more complex.
+```{r}
+time.start = Sys.time() 
+m1_fit_euler = sampling(
+  m1_euler,
+  data = stan_data_m1_euler,
+  chains=3,
+  warmup=2000,
+  iter=4000,
+  init = list_of_inits
+)
+time.end = Sys.time()
+
+
+
+time.end - time.start # model run time 
+
+```
+ 
+#### Model diagnostics 
+
+
+We obtained no warnings about our model, great news!  To be on the safe side, lets check with some model diagnostics. 
+
+
+Check divergent transitions: 
+```{r}
+check_divergences(m1_fit_euler) 
+```
+Check out what divergent transitions are and why they can *never* be ignored [here](https://mc-stan.org/docs/2_29/reference-manual/divergent-transitions.html)  
+
+Plot markov chain trace plots to check for model convergence: 
+``` {r}
+
+m1_euler_post= as.array(m1_fit_euler)
+mcmc_trace(m1_euler_post, pars="lp__")
+mcmc_trace(m1_euler_post, pars=pars)
+mcmc_trace(m1_euler_post, pars="R_0")
+```
+
+
+Univariate and bivariate marginal posterior distributions: 
+``` {r}
+pairs(m1_fit_euler, pars = pars, cex.labels=1.5, font.labels=9, condition = "accept_stat__")  
+```
+
+Note, the strong correlation between $\beta$ and $I0$, indicating the uncertainty in these parameter's psoteriors are correlated given the data. 
+
+
+Overlay densisty estimates obtained for each chain separately: 
+
+``` {r}
+mcmc_dens_overlay(m1_euler_post, pars=pars)
+```
+
+We can also see a summary  of the parameters we are interested in:
+
+```{r}
+m1_fit_euler_summary = summary(m1_fit_euler, pars = pars)$summary
+print(m1_fit_euler_summary,scientific=FALSE,digits=2)
+```
+
+#### Plot the model output against the data 
+
+
+First we extract the posterior estimates. Remember that lambda was the name of the reported incidence variable in our model. Rstan will return a matrix corresponding to iterations, time steps and values. We can convert this to a data frame so that we can use dplyr to reformat.  
+
+```{r}
+post_euler = rstan::extract(m1_fit_euler) 
+
+post_euler_df = post_euler$lambda %>% as.data.frame.table() 
+```
+
+The first column is the iterations (3 chains * 2000 iterations), the second is the time step (176 days) and the the third is the estimated value (reported incidence). 
+
+We will rename the variables, group by day and then calculate the mean and 95% Credible interval for the posterior value. Remember, credible intervals state that given the observed data, there is a 95% probability the value falls between this range. See [this](https://towardsdatascience.com/statistics-101-credible-vs-confidence-interval-af7b7e8fdd79) tutorial for a more detailed discussion of confidence vs. credible intervals. 
+
+```{r}
+post_euler_df_sum = post_euler_df %>% 
+  rename(ni = iterations, time = Var2, value = Freq) %>%
+  dplyr::mutate(
+    ni = as.numeric(ni),
+    time = as.numeric(time)) %>% 
+  group_by(time) %>% 
+  summarise(
+    lower = quantile(value, 0.025),
+    mean = mean(value),
+    upper = quantile(value, 0.975)
+  ) 
+
+```
+
+Finally, left_join the original "observed" data and plot using ggplot. 
+
+```{r message=FALSE, warning=FALSE}
+post_euler_df_sum %>% 
+  left_join(sim_data) %>%  
+  ggplot(aes(x = time , y = rep_inc)) +
+  geom_point()+
+  geom_line(aes(y=mean)) +
+  geom_ribbon(aes(ymin=lower,ymax=upper)) 
+```
+
+
+
+## <a id="RKM"></a> Method 2: Runge-Kutta Method
+
+This second method builds on Eulers method, but rather than calculating a single rate of change at each time step, we calculate 4 different slopes. These slopes are then used as a weighted average to approximate the actual rate of change of states. Because we calculate multiple slops at each interval, we obtain a more accurate approximation. For a more detailed visualisation of this method, see [here](https://www.haroldserrano.com/blog/visualizing-the-runge-kutta-method#:~:text=The%20Runge%2DKutta%20Method%20is,uses%20them%20as%20weighted%20averages).  
+
+To implement this method, we use one of Stan's two inbuilt ODE integrators, *integrate_ode_rk45*, which is the faster (but potentially less robust) of the two. Note, Stan issues warning messages if an integrator fails to solve an ODE (although we have never had this issue), at which point the solver may need to be [adjusted](https://mc-stan.org/docs/2_24/stan-users-guide/control-parameters-for-ode-solving.html) or [swapped](https://mc-stan.org/docs/2_24/stan-users-guide/stiff-ode-section.html). 
+
+We specify the ODE in Stan using a function within, unsurprisingly, the functions block. See the section of [this tutorial](https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html#coding_the_ode_in_stan) on coding the ODE in stan for more details. 
+
+
+#### Fit the model 
+
+Lets fit the Stan model again, using the inbuilt solver. This time, we require additional data: the time steps at which to solve the model (ts). 
+
+```{r warning=FALSE}
+stan_data_m1_RK =    list(n_ts = length(all_dates), # Number of observations 
+                         n_pop = n_pop,          
+                         n_recov = n_recov,           
+                         y = sim_data$rep_inc,     # Data to fit
+                         n_data = length(sim_data$rep_inc), # Number of data points to fit 
+                         sigma = sigma,
+                         gamma = gamma,
+                         time_seed_omicron = seed_omicron, 
+                         ts = 1:length(all_dates))
+
+
+m1_RK = stan_model(paste0(file_path,"models/model1_RK_V1.stan"))
+
+time.start = Sys.time() 
+m1_fit_RK = sampling(
+  m1_RK,
+  data = stan_data_m1_RK,
+  chains=3,
+  warmup=1000,
+  iter=2000,
+  init = ini_1, # We can use the same inital values as before 
+  seed = 200522
+)
+time.end = Sys.time()
+time.end-time.start
+```
+
+#### Model diagnostics 
+```{r}
+check_divergences(m1_fit_RK)
+m1_RK_post= as.array(m1_fit_RK)
+mcmc_trace(m1_RK_post, pars="lp__")
+mcmc_trace(m1_RK_post, pars=pars)
+mcmc_trace(m1_RK_post, pars="R_0")
+pairs(m1_fit_RK, pars = pars, cex.labels=1.5, font.labels=9, condition = "accept_stat__")  
+mcmc_dens_overlay(m1_RK_post, pars=pars)
+```
+
+
+Summary statistics:
+```{r}
+m1_fit_RK_summary = summary(m1_fit_RK, pars = pars)$summary
+print(m1_fit_RK_summary,scientific=FALSE,digits=2)
+```
+
+#### Plot the model 
+
+```{r}
+
+m1_fit_RK_post = rstan::extract(m1_fit_RK)
+
+m1_fit_RK_post$lambda %>% as.data.frame.table() %>%
+  rename(ni = iterations, time = Var2, value = Freq) %>%
+  dplyr::mutate(
+    ni = as.numeric(ni),
+    time = as.numeric(time)) %>% 
+  group_by(time) %>% 
+  summarise(
+    lower = quantile(value, 0.025),
+    mean = mean(value),
+    upper = quantile(value, 0.975)
+  )  %>%  
+  left_join(sim_data) %>%  
+  ggplot(aes(x = time , y = rep_inc)) +
+  geom_point()+
+  geom_line(aes(y=mean)) +
+  geom_ribbon(aes(ymin=lower,ymax=upper))
+```
+
+
+## References 
+
+- (1) Lavezzo E, Franchin E, Ciavarella C, et al. Suppression of a SARS-CoV-2 outbreak in the Italian municipality of Vo’. Nature 2020; 584(7821): 425-9.
+- (2) McAloon C, Collins Á, Hunt K, et al. Incubation period of COVID-19: a rapid systematic review and meta-analysis of observational research. BMJ Open 2020; 10(8): e039652.
+- (3) Madhi SA, Kwatra G, Myers JE, et al. Population Immunity and Covid-19 Severity with Omicron Variant in South Africa. N Engl J Med 2022; 386(14): 1314-26.
