@@ -117,7 +117,7 @@ real[] SIR(real t,    // time
   real theta[2] = {beta , rho}; 
   
   // initial conditions for the solver 
-  real init[5]  = {S0 - I0,0,  I0, 0,  n_recov };
+  real init[5]  = {S0 - I0,0, I0, 0,  n_recov };
   
   // reported incidence 
   real lambda[n_data]; 
@@ -142,17 +142,15 @@ for (t in time_seed_omicron:n_days)
    
  // priors
   
-  beta ~ lognormal(1.5,1);
-  I0 ~ normal(1,10); 
-  rho ~ beta(1,3.5); // changed prior from v1 to account prior knowledge about under-reporting
+  beta ~ lognormal(0.8,0.5);
+  I0 ~ normal(1,1); 
+  rho ~ beta(1.1,5.5);
 
   }
   
   generated quantities {
   
   // basic reproduction number
-
-
   real R_0 = ((1-rho) * beta ) / gamma ; 
 
   // log likelihood 
