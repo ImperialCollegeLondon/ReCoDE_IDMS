@@ -1,0 +1,115 @@
+---
+title: "Simulate Model 1 Data"
+author: "Bethan Cracknell Daniels"
+date: "30/05/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+This code simulates reported incidence data for the emergence of Omicron in Gauteng, South Africa. The code uses DeSolve to solve an SEIQR model, described in the README.md filer, under part 1.     
+
+First, lets set up the script by making sure the environment is clear and creating a path to save the script outputs, which for this script will be a .csv file with our simulated data in. 
+
+```{r}
+
+rm(list = ls())
+file_path = "part_1/data/"
+```
+
+We also need to load packages and source user defined functions. 
+
+```{r}
+library(deSolve)
+library(tidyverse)
+
+source(paste0(file_path,"R/model1_functions.R"))
+```
+
+Then, lets set global variables which define our model. These include the start and end date over which to fit the model, converted into a date format in R. For more detail on working with dates in R, see: https://www.stat.berkeley.edu/~s133/dates.html. 
+
+
+```{r}
+start_date =  as.Date.character("01-09-2021", format = "%d-%m-%Y") 
+end_date = as.Date.character("23-02-2022", format = "%d-%m-%Y")
+all_dates = seq.Date(from = start_date, to = end_date ,  by = "days") # model times 
+ts = 1:length(all_dates)
+```
+
+Once we have a vector of each date we are fitting the model, we can find the right index for important events in our model. For instance, this could include the data an intervention was implemented or a day to start vaccinating. In this simple model, we just want to allow for some time before we fit our model output to the data. That is to say, we don't expect that we would have reported data on Omicron from the day that it first emerged. Instead, we would expect a period of time that Omicron was circulating undetected. To account for this, we will run the model for 1 month, before we "collect" data on the incidence. 
+
+```{r}
+seed_omicron =  which(all_dates == as.Date.character("01-10-2021", format = "%d-%m-%Y")) 
+```
+
+Next, we need to define the model parameters. As we are simulating data, we define all of them. In reality, our model parameters are likely to be a mixture of fixed (from the literature) and estimated. 
+
+```{r}
+R0 = 5          # reproduction number 
+sigma = 1/5.1   # rate of progression
+gamma = 1/2.1   # rate of recovery 
+rho = 0.2       # reporting probability 
+
+beta = ( R0 * gamma )/ (1-rho) # transmission rate  
+```
+
+Next, define the initial states for each compartment. 
+
+```{r}
+n_pop = 15810388               # population of Guateng 
+n_recov = round(n_pop * 0.562) # 56.2% seroprev 
+n_inf = 1                      # 1 initial infection
+S0 = n_pop - n_recov           # susceptible at time of model fitting
+```
+
+Format the data as required by DeSolve and then run the model! 
+```{r}
+initial_state = c(S= S0 - n_inf  , E = 0 , I=n_inf ,Q=0, R=n_recov)
+params = c(beta, sigma, gamma,rho,S0)
+
+model = ode(initial_state, ts, SEIQR, params)
+out.df  = round(as.data.frame(model))
+```
+
+Plot all the model states. 
+
+```{r}
+for(i in 2:ncol(out.df)) plot(out.df[,i])
+```
+
+
+They all look sensible. As an extra check, lets run the model again with R0 = 1. 
+
+**What would we expect the outbreak to look like?**
+
+```{r}
+
+params_check = c(beta=(1 * gamma )/ (1-rho) , sigma, gamma,rho)
+model_check = ode(initial_state, ts, SEIQR, params_check)
+
+
+for(i in 2:ncol(model_check)) plot(model_check[,i])
+```
+
+
+As expected, R0 = 1 means that, on average, each infectious person infects just one more person. This means that the epidemic doesn't take off. 
+
+
+Going back to our simulated epidemic, lets calculate the reported incidence (i.e., the rate that individuals enter the Q compartment) and plot it. Remember, we want to discard the first month as unobserved transmission.   
+
+```{r}
+sim_data = data.frame(time = ts,
+                      rep_inc = round(rho *out.df$E * sigma))[seed_omicron:length(ts), ]
+
+ggplot(sim_data, aes(x= time , y = rep_inc)) +
+  geom_point()
+
+```
+Finally, lets save our simulated data. 
+```{r}
+write.csv(sim_data, paste0(file_path, "sim_data.csv"))
+```
+
