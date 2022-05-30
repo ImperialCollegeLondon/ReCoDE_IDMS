@@ -79,8 +79,17 @@ m1_solv = stan_model(paste0(file_path,"models/model1_solverV1.stan"))
 
 # run our Rstan model ---------------------------------------------------------# 
 
+
+# randomly generate 3 different initial values from pluasible parameter range 
+list_of_inits = list(
+  ini_1(seed = 21),
+  ini_1(seed = 05),
+  ini_1(seed = 22)
+)
+
 # as model complexity increases, its helpful to keep track of the model run time  
 time.start = Sys.time() 
+
 m1_fit_solv = sampling(
   m1_solv,
   data = stan_data_m1_solv,
@@ -124,6 +133,13 @@ pairs(m1_fit_solv, pars = pars, cex.labels=1.5, font.labels=9, condition = "acce
 mcmc_dens_overlay(m1_solv_post, pars=pars)
 
 
+# summary  of the parameters we are interested in -----------------------------# 
+
+m1_fit_solv_summary = summary(m1_fit_solv, pars = pars)$summary
+print(m1_fit_solv_summary,scientific=FALSE,digits=2)
+
+
+
 
 # Plotting the model output against the data ----------------------------------#     
 
@@ -147,26 +163,6 @@ plot_m1_solv_results  = m1_fit_solv_post$lambda %>% as.data.frame.table() %>%
   geom_line(aes(y=mean)) +
   geom_ribbon(aes(ymin=lower,ymax=upper))
 
-
-
-
-# summary  of the parameters we are interested in -----------------------------# 
-
-m1_fit_solv_summary = summary(m1_fit_solv, pars = pars)$summary
-print(m1_fit_solv_summary,scientific=FALSE,digits=2)
-
-
-
-# WILL PROBABLY REMOVE THIS AND INTRODUCE IN PART 2 INSTEAD 
-
-# Leave one out cross validation (LOOCV) --------------------------------------#
-
-# If we want to estimate the predictive performance of our model to compare it 
-# with others, for instance to test different biological hypotheses and see 
-# which bests explain the data, we can estimate the theoretical expected log 
-# pointwise predictive density for a new dataset using cross validation. 
-
-loom1_solv = loo(m1_fit_solv, save_psis = TRUE)
 
 
 
