@@ -80,11 +80,9 @@ real[] SIR(real t,    // time
   int<lower = 1> n_data;      // number of data points to fit to   
   real<lower = 0> sigma;      // progression rate
   real<lower = 0> gamma;      // recovery rate
-  int y[n_data];              // data, total number of infected individuals each day
-
-  real ts [n_days];
-  
-  int <lower = 0> time_seed_omicron; 
+  int y[n_data];              // data, reported incidence each day 
+  real ts [n_days];           // 1:n_days 
+  int <lower = 0> time_seed_omicron; // index when to fit the model to data
 
   }
   
@@ -117,7 +115,7 @@ real[] SIR(real t,    // time
   real theta[2] = {beta , rho}; 
   
   // initial conditions for the solver 
-  real init[5]  = {S0 - I0,0,  I0, 0,  n_recov };
+  real init[5]  = {S0 - I0,0, I0, 0,  n_recov };
   
   // reported incidence 
   real lambda[n_data]; 
@@ -142,10 +140,10 @@ for (t in time_seed_omicron:n_days)
    
  // priors
   
-  beta ~ lognormal(1.5,1);
-  I0 ~ normal(1,10); 
+  
+  beta ~ lognormal(0.8,0.5);
+  I0 ~ normal(1,5); 
   rho ~ beta(1,1);
-
   }
   
   generated quantities {
