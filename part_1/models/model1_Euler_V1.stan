@@ -5,7 +5,7 @@
   int<lower = 1> n_pop;       // population 
  
   real<lower = 0> sigma;  // progression rate
-  real<lower = 0> gamma;  // recovery ates 
+  real<lower = 0> gamma;  // recovery rates 
   
   int y[n_data];           // data, reported incidence each day 
   int <lower = 0> time_seed_omicron; // index when to fit the model to data 
@@ -63,9 +63,9 @@ for(t in 1:n_ts){
   // i.e., we allow for an initial month to seed the model 
   
   
-for (t in time_seed_omicron:n_ts)
-    lambda_fit[(t-time_seed_omicron+1)] = lambda[t];
-
+for (t in time_seed_omicron:n_ts) lambda_fit[(t-time_seed_omicron+1)] = lambda[t];
+  
+  
   }
   
   
