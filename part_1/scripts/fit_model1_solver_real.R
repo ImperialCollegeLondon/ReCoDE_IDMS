@@ -88,11 +88,17 @@ stan_inc_m1_solv = list(
 
 # This is the same model we fit to our simulated date 
 
-m1_solv = stan_model(paste0(file_path, "models/modelV1_solver.stan"))
+m1_solv = stan_model(paste0(file_path, "models/model1_solverV1.stan"))
 
 
 # run our Rstan model V1 ------------------------------------------------------#
 
+
+list_of_inits = list(
+  ini_1(seed = 23),
+  ini_1(seed = 05),
+  ini_1(seed = 22)
+)
 
 time.start = Sys.time()
 m1_fit_solv_real = sampling(
@@ -101,8 +107,8 @@ m1_fit_solv_real = sampling(
   chains = 3,
   warmup = 1000,
   iter = 2000,
-  init = ini_1,
-  seed = 2105200
+  init = list_of_inits,
+  seed = 1
 )
 time.end = Sys.time()
 
@@ -141,7 +147,7 @@ time.end - time.start
 # above to read more about what they mean and why they are worrying.
 
 
-# Note too, our model run time increased from a few minutes to ~50 mins.
+# Note too, our model run time increased from a few minutes to ~15 mins.
 
 # Let's take a look at the model diagnostics again to work out what is going
 # wrong!
@@ -230,16 +236,21 @@ m1_solV2 = stan_model(paste0(file_path, "models/model1_solverV2.stan"))
 
 # run our Rstan model ---------------------------------------------------------#
 
+list_of_inits = list(
+  ini_1(seed = 23),
+  ini_1(seed = 05),
+  ini_1(seed = 22)
+)
 
 time.start = Sys.time()
-m1_fit_solv_real2 = sampling(
+m1_fit_solv_realV2 = sampling(
   m1_solV2,
   data = stan_inc_m1_solv,
   chains = 3,
   warmup = 1000,
   iter = 2000,
-  init = ini_1,
-  seed = 2105200
+  init = list_of_inits,
+  seed = 1
 )
 time.end = Sys.time()
 
@@ -247,6 +258,35 @@ time.end = Sys.time()
 
 time.end - time.start
 
+# model diagnostics -----------------------------------------------------------#
+
+
+# still no divergent transitions, that is good news.
+
+check_divergences(m1_fit_solv_realV2)
+
+
+# The largest R-hat was NA, indicating chains have not mixed, lets take a look.
+m1_solv_post_realV2 = as.array(m1_fit_solv_realV2)
+
+mcmc_trace(m1_solv_post_realV2, pars = "lp__")
+mcmc_trace(m1_solv_post_realV2, pars = pars)
+mcmc_trace(m1_solv_post_realV2, pars = "R_0")
+
+
+# Univariate and bivariate marginal posterior distributions
+
+pairs(
+  m1_fit_solv_real,
+  pars = pars,
+  cex.labels = 1.5,
+  font.labels = 9,
+  condition = "accept_stat__"
+)
+
+
+# overlay density estimates obtained for each chain separately
+mcmc_dens_overlay(m1_fit_solv_real, pars = pars)
 
 # Plotting the model output against the data ----------------------------------#
 
