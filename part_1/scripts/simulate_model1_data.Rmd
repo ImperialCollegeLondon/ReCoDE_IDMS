@@ -12,22 +12,17 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This code simulates reported incidence data for the emergence of Omicron in Gauteng, South Africa. The code uses DeSolve to solve an SEIQR model, described in the README.md filer, under part 1.     
 
-First, lets set up the script by making sure the environment is clear and creating a path to save the script outputs, which for this script will be a .csv file with our simulated data in. 
+Some housekeeping first!
 
-```{r}
-
+```{r message=FALSE, warning=FALSE}
 rm(list = ls())
-file_path = "part_1/data/"
-```
-
-We also need to load packages and source user defined functions. 
-
-```{r}
+file_path = "Q:/ReCoDE_IDMS/part_1/"
 library(deSolve)
 library(tidyverse)
-
 source(paste0(file_path,"R/model1_functions.R"))
+
 ```
+ 
 
 Then, lets set global variables which define our model. These include the start and end date over which to fit the model, converted into a date format in R. For more detail on working with dates in R, see: https://www.stat.berkeley.edu/~s133/dates.html. 
 
@@ -77,7 +72,7 @@ out.df  = round(as.data.frame(model))
 Plot all the model states. 
 
 ```{r}
-for(i in 2:ncol(out.df)) plot(out.df[,i])
+for(i in 2:ncol(out.df)) plot(out.df[,i], main = names(initial_state)[(i-1)] )
 ```
 
 
@@ -91,7 +86,7 @@ params_check = c(beta=(1 * gamma )/ (1-rho) , sigma, gamma,rho)
 model_check = ode(initial_state, ts, SEIQR, params_check)
 
 
-for(i in 2:ncol(model_check)) plot(model_check[,i])
+for(i in 2:ncol(model_check)) plot(model_check[,i], main = names(initial_state)[(i-1)] )
 ```
 
 
@@ -110,6 +105,6 @@ ggplot(sim_data, aes(x= time , y = rep_inc)) +
 ```
 Finally, lets save our simulated data. 
 ```{r}
-write.csv(sim_data, paste0(file_path, "sim_data.csv"))
+write.csv(sim_data, paste0(file_path, "data/sim_data.csv"))
 ```
 
