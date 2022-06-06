@@ -1,13 +1,14 @@
-  data {
+  data { // Input data
+  
   int<lower = 1> n_data;      // number of days observed
   int<lower = 1> n_ts;        // number of model time steps
   int<lower = 1> n_recov;     // recovered 
   int<lower = 1> n_pop;       // population 
  
-  real<lower = 0> sigma;  // progression rate
-  real<lower = 0> gamma;  // recovery rates 
+  real<lower = 0> sigma;      // progression rate
+  real<lower = 0> gamma;      // recovery rates 
   
-  int y[n_data];           // data, reported incidence each day 
+  int y[n_data];                     // data, reported incidence each day 
   int <lower = 0> time_seed_omicron; // index when to fit the model to data 
   
   }
@@ -16,6 +17,7 @@
   real<lower =0> beta;
   real<lower =0> I0;
   real<lower =0, upper = 1> rho; 
+  real<lower =0> k; 
   }
   
   transformed parameters{
@@ -74,13 +76,15 @@ for (t in time_seed_omicron:n_ts) lambda_fit[(t-time_seed_omicron+1)] = lambda[t
     
  // likelihood 
  
- target += poisson_lpmf(y | lambda_fit);
+ target += neg_binomial_2_lpmf(y | lambda_fit, k);
    
  // priors
   
   beta ~ lognormal(0.8,0.5);
   I0 ~ normal(1,5); 
   rho ~ beta(1,1);
+  k ~ exponential(0.01);
+  
 
   }
 
