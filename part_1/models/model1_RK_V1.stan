@@ -130,7 +130,9 @@ real[] SIR(real t,    // time
   
  for (t in 1:n_ts)  lambda[t] = rho * sigma *  y_hat[t,2] ;
 
- for (t in time_seed_omicron:n_ts) lambda_fit[(t-time_seed_omicron+1)] = lambda[t];
+ // adding a very small number to our liklihood stops issues with the sample rejecting initial 
+ // values due log probability not being >0. 
+ for (t in time_seed_omicron:n_ts) lambda_fit[(t-time_seed_omicron+1)] = lambda[t] + (1/100000);
   
 }
   model {
