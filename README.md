@@ -9,6 +9,7 @@ The aim of this exemplar is to demonstrate how to design and fit a mathematical 
 Required:
 - Experience using R, for instance the Graduate school course *R programming*.
 - Knowledge of Bayesian statistics, for instance, the textbook *A students guide to Bayesian statistics* by Ben Lambert is a great place to start. Chapter 16 also introduces Stan. 
+- Download Rstan following [these](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started) instructions. 
 
 Beneficial:
 - Some familiarity with Stan. 
