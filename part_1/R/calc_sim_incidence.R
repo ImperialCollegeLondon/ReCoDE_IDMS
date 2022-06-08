@@ -26,10 +26,10 @@ calc_sim_incidence = function(
   # required package 
   library(tidyverse)
 
-  data = data.frame(time = all_dates,
+  data = data.frame(date = all_dates,
                         rep_inc = round(rho *ODE_data$E * sigma))[date_seed:length(all_dates), ]
   
-  plot = ggplot(data, aes(x= time , y = rep_inc)) +
+  plot = ggplot(data, aes(x= date , y = rep_inc)) +
     geom_point() +
     ylab("reported incidence") +
     xlab("date")
