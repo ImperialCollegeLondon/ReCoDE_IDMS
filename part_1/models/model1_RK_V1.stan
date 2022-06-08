@@ -103,6 +103,7 @@ real[] SIR(real t,    // time
   real<lower = 0> beta;
   real<lower = 0> I0;
   real<lower = 0, upper = 1> rho;
+  real<lower = 0> k;
 
   }
   
@@ -136,14 +137,15 @@ real[] SIR(real t,    // time
     
  // likelihood 
  
- target += poisson_lpmf(y | lambda_fit);
+ target += neg_binomial_2_lpmf(y | lambda_fit,k);
    
  // priors
   
   
   beta ~ lognormal(0.8,0.5);
-  I0 ~ normal(1,5); 
-  rho ~ beta(1,1);
+  I0   ~ normal(1,5); 
+  rho  ~ beta(1,1);
+  k    ~ exponential(0.01);
   }
   
   generated quantities {
