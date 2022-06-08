@@ -1,7 +1,7 @@
 # Function to produce simulated reported incidence data -----------------------# 
 
 
-# No input:
+# Input:
 
 # - n_pop:    population size, assumed for Gauteng 
 # - immunity: SARS-CoV-2 seroprevalance (%), user defined 
@@ -14,14 +14,14 @@
 
 # Output: 
 
-# - starting values for our 3 model parameters, beta, I0, rho 
+# - data frame of solutions to the derivatives of all compartments at each time step
 
 simulate_data = function(
-  n_pop = 15810388                
+  n_pop = 15810388,               
   immunity , 
-  n_inf = 1,
-  sigma = 1/5.1   
-  gamma = 1/2.1   
+  n_inf ,
+  sigma = 1/5.1,   
+  gamma = 1/2.1,   
   rho ,
   beta , 
   ts
@@ -29,21 +29,23 @@ simulate_data = function(
   
   # required package 
   library(deSolve)
+  library(cowplot)
 
   # source model 
-  source("models/model1_deSolve")
+  source("models/model1_deSolve.R")
   
   # initial values 
   n_recov = n_pop * immunity 
-  S0 = n_pop - n_recov 
-  
-  
-  initial_state = c(S= S0 - n_inf  , E = 0 , I=n_inf ,Q=0, R=n_recov)
-  params = c(beta, sigma, gamma,rho,S0)
+
+  initial_state = c(S= n_pop - n_recov - n_inf  , E = 0 , I=n_inf ,Q=0, R=n_recov)
+  params = c(S0 = n_pop - n_recov , beta, sigma, gamma,rho)
   
   model = ode(initial_state, ts, SEIQR, params)
-  out.df  = round(as.data.frame(model))
+  data  = round(as.data.frame(model))
+
+  for(i in 2:ncol(data)) plot(data[,i], main = names(initial_state)[(i-1)] )
   
-  return(out.df)
+  
+  return(data)
 }
 
