@@ -7,23 +7,23 @@ In part 1, you will find 2 RMD files:
 
 - ***part1.Rmd:*** this is the main tutorial which talks through: 
 
- * designing an infectious disease model
- * coding it up in Stan 
- * simulating data 
- * fitting the model to data
- * model diagnostics
- * plotting the model fit
+ 1. designing an infectious disease model
+ 2. coding it up in Stan 
+ 3. simulating data 
+ 4. fitting the model to data
+ 5. model diagnostics
+ 6. plotting the model fit
  
  
-Broadly, each one of these activities is achieved by one or more functions, which mostly takes as input the output of the function before. 
-
-The Rmd. file is also designed to be interactive, with questions and activities along the way.
+Broadly, each one of these activities is achieved by one or more functions, which mostly takes as input the output of the function before. The Rmd. file is also designed to be interactive, with questions and activities along the way.
 
 - ***part1_Solutions.Rmd:*** is as above, but with the solutions. 
 
+
+
 Also in the part 1 you will find the following folders: 
 
-#### R
+## R
 
 This folder contains all the functions needed to run the Rmd file. As stated above, each function has a specific purpose and the functions are designed to be run in order. The functions are as follows: 
 
@@ -39,21 +39,24 @@ This folder contains all the functions needed to run the Rmd file. As stated abo
 
 - *plot_model_fit.R*: a function to to plot the results of a fitted stan model against the data to which it was fit. Takes as input a fitted Stan model, the name of the variables to be plotted, and the simulated or observed data.
 
-#### models:
+## models:
 
 This folder contains the compartmental models used in part 1. 
 
-R models: 
+**R models:**
+
 - *model1_deSolve.R*: a function to solve SEIQR model which is sourced by the function *simulate_data.R*. 
 
-Stan models (written in C++): 
+**Stan models (written in C++):**
+
 - *model1_Euler_V1.stan*: a Stan model which solves the ODEs using the Euler method at a single day step. 
+
 - *model1_Euler_V2.stan*: a Stan model which solves the ODEs using the Euler method at a used defined time step. 
 
 - *model1_RK_V1.stan*: a Stan model which solves the ODEs using the Runge-Kutta Method. 
 
 
-#### images
+#### images:
 
 
 This file contains figures used in the RMD as learning resources, and can largely be ignored. 
