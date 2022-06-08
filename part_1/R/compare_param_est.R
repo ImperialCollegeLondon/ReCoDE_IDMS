@@ -1,4 +1,4 @@
-# Function to compare parameter estimates between Euler and RK ----------------#
+# Function to compare parameter estimates between models or methods------------#
 # methods of solving ODEs. ----------------------------------------------------# 
 
 
