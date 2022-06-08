@@ -1,6 +1,6 @@
  
- // like with the simulated data, we first need to define a function which solves 
- // our compartmental model and outputs the derivatives of all compartments at each time step 
+ // We first need to define a function which solves our compartmental model
+ // and outputs the derivatives of all compartments at each time step 
  
  functions {
 real[] SIR(real t,    // time
@@ -74,14 +74,14 @@ real[] SIR(real t,    // time
   }
 }
   data {
-  int<lower = 1> n_ts;      // number of days observed
+  int<lower = 1> n_ts;        // number of days observed
   int<lower = 1> n_recov;     // recovered 
   int<lower = 1> n_pop;       // population 
   int<lower = 1> n_data;      // number of data points to fit to   
   real<lower = 0> sigma;      // progression rate
   real<lower = 0> gamma;      // recovery rate
   int y[n_data];              // data, reported incidence each day 
-  real ts [n_ts];           // 1:n_days 
+  real ts [n_ts];             // 1:n_days 
   int <lower = 0> time_seed_omicron; // index when to fit the model to data
 
   }
@@ -128,10 +128,8 @@ real[] SIR(real t,    // time
   // i.e., we allow for an initial month to seed the model 
   
  for (t in 1:n_ts)  lambda[t] = rho * sigma *  y_hat[t,2] ;
-  
-  
-  
-for (t in time_seed_omicron:n_ts) lambda_fit[(t-time_seed_omicron+1)] = lambda[t];
+
+ for (t in time_seed_omicron:n_ts) lambda_fit[(t-time_seed_omicron+1)] = lambda[t];
   
 }
   model {
@@ -151,14 +149,7 @@ for (t in time_seed_omicron:n_ts) lambda_fit[(t-time_seed_omicron+1)] = lambda[t
   generated quantities {
   
   // basic reproduction number
-
-
   real R_0 = ((1-rho) * beta ) / gamma ; 
 
-  // log likelihood 
-  
-  vector[n_data] log_lik ;
-  
-  for(i in 1:n_data) log_lik[i] = poisson_lpmf(y[i]| lambda[i]) ;
-  
+
   }
