@@ -3,8 +3,8 @@
 
 # Input:
 
-# - stan_fit: an object of S4 class which contains the model fit results.
-# - pars: names of parameters we want to check 
+# - stan_fit: model fit results, user defined (class = stanfit)
+# - pars: vector of names of parameters we want to check, user defined (class = charachter)
 
 # Output: 
 
