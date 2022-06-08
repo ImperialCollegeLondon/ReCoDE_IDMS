@@ -3,7 +3,7 @@
 
 # Input:  
 
-# - seed for reproducability 
+# - seed, assumed to be 1 (class = numeric)
 
 # Output: 
 

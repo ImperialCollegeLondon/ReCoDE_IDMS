@@ -3,14 +3,14 @@
 
 # Input:
 
-# - n_pop:    population size, assumed for Gauteng 
-# - immunity: SARS-CoV-2 seroprevalance (%), user defined 
-# - n_inf = 1: number initially infectious, assumed 1 
-# - sigma = 1/5.1: progression rate, 1/ incubation period assumed to be 5.1 days  
-# - gamma = 1/2.1: recovery rate, 1 / infectious period assumed to be 2.1 days 
-# - rho  = reporting rate, used defined 
-# - beta = transmission rate, user defined 
-# - ts = time steps, user defined 
+# - n_pop:    population size, assumed for Gauteng (class = numeric)
+# - immunity: SARS-CoV-2 seroprevalance (%), user defined (class = numeric, 0-1)
+# - n_inf: number initially infectious, assumed 1 (class = numeric)
+# - sigma:  progression rate, 1/ incubation period assumed to be 5.1 days (class = numeric)
+# - gamma: recovery rate, 1 / infectious period assumed to be 2.1 days (class = numeric)
+# - rho: reporting probability, used defined (class = numeric)
+# - beta: transmission rate, user defined (class = numeric)
+# - ts: vector of time steps, user defined (class = numeric)
 
 # Output: 
 

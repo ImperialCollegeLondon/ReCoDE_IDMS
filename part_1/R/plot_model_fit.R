@@ -4,10 +4,11 @@
 
 # Input:
 
-# - stan_fit: model fit results (class = stanfit).
-# - variable_model: name of the model variable to plot (class = charachter)
-# - variable_data: name of the data variable to plot (class = charachter). 
-# - data: observed or simulated data which the model was fit to (class = data.frame). 
+# - stan_fit: model fit results, user defined (class = stanfit).
+# - variable_model: name of the model variable to plot, user defined (class = character)
+# - variable_data: name of the data variable to plot, user defined (class = character). 
+# - data: observed or simulated data which the model was fit to, user defined
+#   (class = data.frame). 
 
 # Output: 
 

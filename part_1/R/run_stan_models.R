@@ -3,12 +3,16 @@
 
 # Input:
 
-# - list_data: data for model fitting (class = list)
-# - model: model compiled from C++ code (class = stanmodel)
-# - n_chains: number of Markov chains (optional, class = numeric, positive integer)
-# - n_iter: number of iterations for each chain (optional, class = numeric, positive integer)
-# - n_warmup: number of warmup iterations per chain (optional, class = numeric, positive integer, must be less than n_iter)
-# - seed_values: vector of values for setting seed when choosing intiial values (optional, class = numeric, positive integer, vector lenght must equal n_chains)
+# - list_data: data for model fitting, user defined (class = list)
+# - model: model compiled from C++ code, user defined (class = stanmodel)
+# - n_chains: number of Markov chains, assumed to be 3 (class = numeric, positive integer)
+# - n_iter: number of iterations for each chain, assumed to be 2000 
+#   (class = numeric, positive integer)
+# - n_warmup: number of warmup iterations per chain, assumed to be 1000 
+#   (class = numeric, positive integer, must be less than n_iter)
+# - seed_values: vector of values for setting seed when choosing initial values, 
+#   assumed to be 14,05,97 (class = numeric, positive integer, 
+#   vector length must equal n_chains)
 
 # Output: 
 
