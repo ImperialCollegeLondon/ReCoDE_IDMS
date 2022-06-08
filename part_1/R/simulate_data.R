@@ -38,7 +38,7 @@ simulate_data = function(
   n_recov = n_pop * immunity 
 
   initial_state = c(S= n_pop - n_recov - n_inf  , E = 0 , I=n_inf ,Q=0, R=n_recov)
-  params = c(S0 = n_pop - n_recov , beta, sigma, gamma,rho)
+  params = c(S0 = n_pop - n_recov , beta=beta, sigma=sigma, gamma=gamma,rho=rho)
   
   model = ode(initial_state, ts, SEIQR, params)
   data  = round(as.data.frame(model))
