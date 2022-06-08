@@ -56,7 +56,7 @@ time.start = Sys.time()
   )
  time.end = Sys.time()
  
- print( "model run time =", time.end - time.start)
+ print(time.end - time.start)
  
  return(stan_fit)
 }
