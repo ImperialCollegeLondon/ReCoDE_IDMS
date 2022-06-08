@@ -4,10 +4,10 @@
 
 # Input:
 
-# - stan_fit: an object of S4 class which contains the model fit results.
-# - variable_model: name of the model variable to plot
-# - variable_data: name of the data variable to plot. 
-# - data: observed or simulated data which the model was fit to. 
+# - stan_fit: model fit results (class = stanfit).
+# - variable_model: name of the model variable to plot (class = charachter)
+# - variable_data: name of the data variable to plot (class = charachter). 
+# - data: observed or simulated data which the model was fit to (class = data.frame). 
 
 # Output: 
 
@@ -16,7 +16,7 @@
 plot_model_fit = function(
  stan_fit,
  variable_model,
- variable_data
+ variable_data,
  data 
 ){
   
@@ -26,10 +26,10 @@ plot_model_fit = function(
   # extract posterior estimates from stan fit 
   stan_fit_ext = rstan::extract(stan_fit) 
   
-  stan_fit_df = stan_fit_ext$variable %>% as.data.frame.table() 
+  stan_fit_df = stan_fit_ext[[variable_model]] %>% as.data.frame.table() 
   
   # group by data and calculate the mean and 95% CrI 
-  post_euler_df_sum = post_euler_df %>% 
+  stan_fit_df_sum = stan_fit_df %>% 
     rename(ni = iterations, time = Var2, value = Freq) %>%
     dplyr::mutate(
       ni = as.numeric(ni),
@@ -41,14 +41,21 @@ plot_model_fit = function(
       upper = quantile(value, 0.975)
     ) 
   
-  # left join observed data and plot using ggplot 
+  # here we make a variable from the rownames of our data, 
+  # which account for the discarded unobserved data if using simulated data 
+
+  data$time = as.numeric(rownames(data))  
   
- plot = post_euler_df_sum %>% 
-  left_join(sim_data) %>%  
-    ggplot(aes(x = time , y = variable_data)) +
-    geom_point()+
-    geom_line(aes(y=mean)) +
-    geom_ribbon(aes(ymin=lower,ymax=upper)) 
+  ## create a name from the character string describing the variable to plot 
+  variable_data = sym(variable_data)
+
+  # left join observed data and plot using ggplot 
+   plot = stan_fit_df_sum %>% 
+   left_join(data) %>%  
+   ggplot(aes(x = time , y = !!variable_data)) +
+   geom_point()+
+   geom_line(aes(y=mean)) +
+   geom_ribbon(aes(ymin=lower,ymax=upper)) 
   
   return(plot)
 }
