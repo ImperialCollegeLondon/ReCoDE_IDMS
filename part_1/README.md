@@ -23,9 +23,9 @@ The Rmd. file is also designed to be interactive, with questions and activities 
 
 Also in the part 1 you will find the following folders: 
 
-#### R: functions to run the model 
+#### R
 
-As stated above, each function has a specific purpose and the functions are designed to be run in order. The functions are as follows: 
+This folder contains all the functions needed to run the Rmd file. As stated above, each function has a specific purpose and the functions are designed to be run in order. The functions are as follows: 
 
 - *simulate_data.R*: A function to produce simulated reported incidence data using the model *model1_deSolve.R*. Takes as input parameter values for the model. Outputs a data frame of solutions to the derivatives of all compartments at each time step. 
 
@@ -39,7 +39,9 @@ As stated above, each function has a specific purpose and the functions are desi
 
 - *plot_model_fit.R*: a function to to plot the results of a fitted stan model against the data to which it was fit. Takes as input a fitted Stan model, the name of the variables to be plotted, and the simulated or observed data.
 
-#### models: compartmental models 
+#### models:
+
+This folder contains the compartmental models used in part 1. 
 
 R models: 
 - *model1_deSolve.R*: a function to solve SEIQR model which is sourced by the function *simulate_data.R*. 
