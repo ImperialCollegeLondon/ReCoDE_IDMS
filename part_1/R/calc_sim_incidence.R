@@ -3,11 +3,12 @@
 
 # Input:
 
-# - ODE_data: solution to the derivatives of all compartments at each time step (class = data.frame)
-# - all_dates: list of all dates (class = dates)
-# - date_seed: date to seed variant (class = character)
-# - rho: reporting rate (class = numeric)
-# - sigma: recovery rate (optional, class = numeric)
+# - ODE_data: solution to the derivatives of all compartments at each time step,
+#   user defined (class = data.frame)
+# - all_dates: list of all dates, user defined (class = dates)
+# - date_seed: date to seed variant, user defined (class = date)
+# - rho: reporting probability, user defined (class = numeric, 0-1)
+# - sigma: recovery rate, assumed to be 1/5.1 (optional, class = numeric)
 
 # Output: 
 
@@ -27,7 +28,9 @@ calc_sim_incidence = function(
   library(tidyverse)
 
   data = data.frame(date = all_dates,
-                        rep_inc = round(rho *ODE_data$E * sigma))[date_seed:length(all_dates), ]
+                        rep_inc = round(rho *ODE_data$E * sigma))
+  
+  data = filter(data, date >= date_seed)
   
   plot = ggplot(data, aes(x= date , y = rep_inc)) +
     geom_point() +
