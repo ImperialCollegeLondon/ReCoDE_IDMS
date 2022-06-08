@@ -23,7 +23,7 @@ Broadly, each one of these activities is achieved by one or more functions, whic
 
 Also in the part 1 you will find the following folders: 
 
-## R
+### R:
 
 This folder contains all the functions needed to run the Rmd file. As stated above, each function has a specific purpose and the functions are designed to be run in order. The functions are as follows: 
 
@@ -39,7 +39,7 @@ This folder contains all the functions needed to run the Rmd file. As stated abo
 
 - *plot_model_fit.R*: a function to to plot the results of a fitted stan model against the data to which it was fit. Takes as input a fitted Stan model, the name of the variables to be plotted, and the simulated or observed data.
 
-## models:
+### models:
 
 This folder contains the compartmental models used in part 1. 
 
@@ -56,7 +56,7 @@ This folder contains the compartmental models used in part 1.
 - *model1_RK_V1.stan*: a Stan model which solves the ODEs using the Runge-Kutta Method. 
 
 
-#### images:
+### images:
 
 
 This file contains figures used in the RMD as learning resources, and can largely be ignored. 
