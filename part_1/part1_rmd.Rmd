@@ -27,7 +27,7 @@ As well as designing a model, we will also simulate fake data to check our model
 
 This code also aims to be reusable, sustainable and testable - important features often overlooked in R! 
 
-First, we need to load some packages. We also need to source the functions needed to run this script, found in the *R* folder. Finally, we need to compile the Stan models, found in the *models* folder. 
+First, we need to load some packages. We also need to source the functions needed to run this script, found in the *R* folder and read in the raw incidence data. Finally, we need to compile the Stan models, found in the *models* folder. 
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -42,6 +42,11 @@ source("R/draw_init_values.R")
 source("R/run_stan_models.R")
 source("R/diagnose_stan_fit.R")
 source("R/plot_model_fit.R")
+source("R/tidy_obs_inc.R")
+
+# Data 
+
+raw_data = read.csv("reported_incidence_data_Gauteng.csv")
 
 # Models
 m1_EU = stan_model("models/model1_Euler_V1.stan")
@@ -376,7 +381,8 @@ end_date = as.Date.character("23-02-2022", format = "%d-%m-%Y")
 all_dates = seq.Date(from = start_date, to = end_date ,  by = "days") # model times 
 ts = 1:length(all_dates)
 
-seed_omicron =  which(all_dates == as.Date.character("01-10-2021", format = "%d-%m-%Y")) 
+seed_omicron =as.Date.character("01-10-2021", format = "%d-%m-%Y")
+
 ```
 
 As we are simulating data, we next need to define both the fixed and estimated parameters. 
@@ -423,11 +429,11 @@ Then, lets calculate the reported incidence (i.e., the rate that individuals ent
 simulated_data = calc_sim_incidence(
   ODE_data= sim_data,       # ODE solutions
   all_dates = all_dates,    # model dates
-  date_seed = seed_omicron, # time step to seed omicron 
+  date_seed = seed_omicron, # date to seed omicron 
   rho = rho                 # reporting probability 
 )
 
-rep_inc = simulated_data[[1]]
+sim_inc = simulated_data[[1]]
 simulated_data[[2]] # plot of reported incidence 
 ```
 
@@ -464,11 +470,11 @@ stan_fit_EU = run_stan_models(
       n_ts = length(all_dates), # no. time steps 
       n_pop = n_pop,            # population
       n_recov = n_recov,        # recovered population 
-      y = rep_inc$rep_inc,      # incidence data 
-      n_data = dim(rep_inc)[1], # no. data
+      y = sim_inc$rep_inc,      # incidence data 
+      n_data = dim(sim_inc)[1], # no. data
       sigma = sigma,            # progression rate       
       gamma = gamma,            # recovery rate 
-      time_seed_omicron = seed_omicron # time point to seed omicron
+      time_seed_omicron = which(all_dates == seed_omicron) # index to seed omicron
     ), 
   model = m1_EU 
 )
@@ -505,7 +511,7 @@ The function allow us to calculate the mean and 95% CrI, which are the 2.5% and 
 We then plot these against our simulated data, over time.
 
 ```{r message=FALSE, warning=FALSE}
-EU_plot = plot_model_fit(stan_fit_EU, variable_model = "lambda", variable_data = "rep_inc",  rep_inc)
+EU_plot = plot_model_fit(stan_fit_EU, variable_model = "lambda", variable_data = "rep_inc",  sim_inc)
 
 EU_plot
 ```
@@ -527,11 +533,11 @@ stan_fit_RK = run_stan_models(
       n_ts = length(all_dates),         # no. time steps 
       n_pop = n_pop,                    # population
       n_recov = n_recov,                # recovered population 
-      y = rep_inc$rep_inc,              # incidence data 
-      n_data = dim(rep_inc)[1],         # no. data 
+      y = sim_inc$rep_inc,              # incidence data 
+      n_data = dim(sim_inc)[1],         # no. data 
       sigma = sigma,                    # progression rate  
       gamma = gamma,                    # recovery rate 
-      time_seed_omicron = seed_omicron, # time point to seed omicron 
+      time_seed_omicron = which(all_dates == seed_omicron), # index seed omicron 
       ts = 1:length(all_dates)          # time steps 
     ), 
   model = m1_RK 
@@ -546,7 +552,7 @@ RK_diag
 
 **As does the model plot.**
 ```{r}
-RK_plot = plot_model_fit(stan_fit_RK, "lambda", "rep_inc", rep_inc)
+RK_plot = plot_model_fit(stan_fit_RK, "lambda", "rep_inc", sim_inc)
 
 RK_plot
 ```
@@ -555,64 +561,27 @@ RK_plot
 
 **Q7: Which method is fastest? By how much?**
 
-**A7: the Euler method is ~9 x faster**
+**A7: the Euler method is ~8 x faster**
 
 **Q8: Which method recovers the true parameters best? Why do we get good fits for both models but different parameter estimates? **
 
-**A8: Lets plot our original values, alongside our estimated values**
+**A8: Lets plot our original values, alongside the mean and 95% CrI of the posterior distributions of our estimated parameters, using the function *compare_param_est* **
   
-
 ```{r}
+compare_param_est(
+  parameter_names = c("beta", "rho", "I0"),
+  true_param_values = c(beta, rho, n_inf),
+  param_values1 =  EU_diag[[3]][,c(1,4,8)],
+  param_values2 =  RK_diag[[3]][,c(1,4,8)]
+)
 
-true_param = data.frame(names = pars,
-                  mean = c(beta, rho, n_inf))
-
-EU_param = data.frame(names = pars, 
-  EU_diag[[3]][,c(1,4,8)])
-
-RK_param = data.frame(names = pars, 
-  RK_diag[[3]][,c(1,4,8)])
-
-param_df = true_param  %>% 
-bind_rows(EU_param) %>% 
-  bind_rows(RK_param) %>%  
-   rename(lower = "X2.5.", upper = "X97.5.") %>% 
-  mutate(model = c(rep("true", 3), rep("Euler", 3), rep("RK",3))) 
-
-# plot rho 
-param_df %>% 
-  filter(names == "rho") %>% 
-ggplot(aes(x=names, y = mean))+
-  geom_point(aes(color = model), position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = lower, ymax = upper, color = model),
-                   position = position_dodge(width = 0.5), width =  0.4, size = 1) +
-  ylab("parameter estimate")
-  
-
-# plot I0 
-param_df %>% 
-  filter(names == "I0") %>% 
-ggplot(aes(x=names, y = mean))+
-  geom_point(aes(color = model), position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = lower, ymax = upper, color = model),
-                   position = position_dodge(width = 0.5), width =  0.4, size = 1) +
-  ylab("parameter estimate")
-
-
-
-# plot beta 
-param_df %>% 
-  filter(names == "beta") %>% 
-ggplot(aes(x=names, y = mean))+
-  geom_point(aes(color = model), position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = lower, ymax = upper, color = model),
-                   position = position_dodge(width = 0.5), width =  0.4, size = 1) +
-  ylab("parameter estimate")
 ```
 
 **Both methods recover the parameter estimate for $\rho$, although the Euler method is subject to more uncertainty. The RK method is also more accurate than the Euler method at recovering the values for $\beta$ and $I_0$. Remember that the bivariate marginal posterior distributions plots for both methods showed strong correlation between $\beta$, $\rho$ and $I0$, indicating the uncertainty in these parameter's posteriors are correlated given the data. It is also important to remember that the data is generated using a single parameter value, whereas in Bayesian modelling we consider parameters to be distributions, not fixed values. This highlights the limitations of using a single simulated data set, how do we decide if the posterior distribution is close enough to the "correct" value? Nevertheless, we can see that the RK method is more accurate than the Euler method** 
 
-## Improving the accuracy of the Euler method 
+
+
+### Improving the accuracy of the Euler method 
 
 **Q9: Reduce the time step at which *model1_Euler_V1.stan* solves the ODEs to improve the accuracy of the fit** 
 
@@ -634,29 +603,47 @@ stan_fit_EU2 = run_stan_models(
       n_ts = length(all_dates),         # no. time steps 
       n_pop = n_pop,                    # population
       n_recov = n_recov,                # recovered population 
-      y = rep_inc$rep_inc,              # incidence data 
+      y = sim_inc$rep_inc,              # incidence data 
       n_data = dim(rep_inc)[1],         # no. data 
       sigma = sigma,                    # progression rate  
       gamma = gamma,                    # recovery rate 
-      time_seed_omicron = seed_omicron, # time point to seed omicron 
-      scale_time_step = 2               # amount to reduce time step
+      time_seed_omicron = which(all_dates == seed_omicron), # index seed omicron 
+      scale_time_step = 5               # amount to reduce time step
     ), 
   model = m1_EU2 
 )
 
 
 ```
+**Even reducing the step size by a factor of 5-fold, the run time is ~3x faster than the RK method.**
 
 **Let's check the diagnostics now and see if we are able to improve the accuracy. **
 
 ```{r}
-diagnose_stan_fit(stan_fit_EU2, pars = c("beta", "rho", "I0"))
+EU2_diag = diagnose_stan_fit(stan_fit_EU2, pars = c("beta", "rho", "I0"))
+
+EU2_diag
 ```
 
 
 ```{r}
-plot_model_fit(stan_fit_EU, "lambda", sim_data)
+EU2_plot = plot_model_fit(stan_fit_EU2, "lambda_days", "rep_inc", rep_inc)
+
+EU2_plot
 ```
+**Finally, lets compare parameter estimates again**
+
+```{r}
+
+compare_param_est(
+  parameter_names = c("beta", "rho", "I0"),
+  true_param_values = c(beta, rho, n_inf),
+  param_values1 =  EU2_diag[[3]][,c(1,4,8)],
+  param_values2 =  RK_diag[[3]][,c(1,4,8)]
+)
+```
+
+
 
 # Fitting to real data 
 
@@ -664,9 +651,43 @@ Now that we are confident in our models fitting to simulated data, lets fit to r
 
 We can get data on the reported incidence from GitHub, we just need to filter by date. 
 
-**Activity: fit both model variations to the real data. N.b. use the second version of the Euler model, where we reduce the time step to improve accuracy (*model1_EU2* and *model1RK*)** 
+**Q10: fit both model variations to the real data *raw_data*. The *raw_data* is provided for all districts of South Africa between 05-03-2020 and 08-06-2022. The column GP refers to Gauteng. The data provided is cumulative so you will need to convert to daily incidence data.**
+**N.b. use the second version of the Euler model, where we reduce the time step to improve accuracy (*model1_EU2* and *model1RK*)** 
 
 
+**A10: The function *tidy_inc_data* takes the raw data and converts the cumulative incidence to daily incidence. It also filters for Gauteng and between our seed and end dates. The function returns a date frame with the dates, in date format, the cumulative incidence and the daily incidence.**
+
+
+
+```{r}
+obs_inc = tidy_obs_inc(raw_data = raw_data,
+              date_seed = seed_omicron,
+              end_date = end_date
+              )
+
+plot(obs_inc$date,obs_inc$cases)
+```
+ 
+ **Fit the EU model to the observed data**
+
+
+```{r}
+stan_fit_EU2_obs = run_stan_models(
+  list_data =
+    list(
+      n_ts = length(all_dates),         # no. time steps 
+      n_pop = n_pop,                    # population
+      n_recov = n_recov,                # recovered population 
+      y = obs_inc$rep_inc,              # incidence data 
+      n_data = dim(obs_inc)[1],         # no. data 
+      sigma = sigma,                    # progression rate  
+      gamma = gamma,                    # recovery rate 
+      time_seed_omicron = which(all_dates == seed_omicron), # index seed omicron 
+      scale_time_step = 5               # amount to reduce time step
+    ), 
+  model = m1_EU2 
+)
+```
 
 
 
