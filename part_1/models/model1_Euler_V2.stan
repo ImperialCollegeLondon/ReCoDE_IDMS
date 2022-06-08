@@ -125,5 +125,29 @@ for (t in time_seed_omicron:n_ts) lambda_fit[(t-time_seed_omicron+1)] = lambda_d
   generated quantities {
   // basic reproduction number
   real R_0 = ((1-rho) * beta ) / gamma ; 
+  
+   real lambda_days[n_ts];
+
+  // As we reduced the time step to solver our model over, 
+  // we need aggregate from our reduced time step to incidence / day
+  
+  
+  // we are going to use a for loop to sum over each day 
+ 
+  
+  // used for for loop
+  int index;
+  int ind ;
+
+   index = 1;
+
+  for (t in 1:n_ts){
+  ind = index + (scale_time_step-1);
+
+  lambda_days[t] =  sum(lambda[index:ind]);
+
+  index = index + scale_time_step;
+}
+
 
   }
