@@ -42,7 +42,9 @@ source("R/draw_init_values.R")
 source("R/run_stan_models.R")
 source("R/diagnose_stan_fit.R")
 source("R/plot_model_fit.R")
+source("R/compare_param_est.R")
 source("R/tidy_obs_inc.R")
+
 
 # Data 
 
@@ -52,7 +54,8 @@ raw_data = read.csv("reported_incidence_data_Gauteng.csv")
 m1_EU = stan_model("models/model1_Euler_V1.stan")
 m1_RK = stan_model("models/model1_RK_V1.stan")
 m1_EU2 = stan_model("models/model1_Euler_V2.stan")
-
+m1_EU3 = stan_model("models/model1_Euler_V3.stan")
+m1_EU4 = stan_model("models/model1_Euler_V4.stan")
 ```
 
 
@@ -378,11 +381,9 @@ As mentioned above, we want to seed Omicron 1 month before we fit to data. We ca
 ```{r}
 start_date =  as.Date.character("01-09-2021", format = "%d-%m-%Y") 
 end_date = as.Date.character("23-02-2022", format = "%d-%m-%Y")
-all_dates = seq.Date(from = start_date, to = end_date ,  by = "days") # model times 
-ts = 1:length(all_dates)
-
+all_dates = seq.Date(from = start_date, to = end_date ,  by = "days") # model times
 seed_omicron =as.Date.character("01-10-2021", format = "%d-%m-%Y")
-
+ts = 1:length(all_dates)
 ```
 
 As we are simulating data, we next need to define both the fixed and estimated parameters. 
@@ -474,7 +475,8 @@ stan_fit_EU = run_stan_models(
       n_data = dim(sim_inc)[1], # no. data
       sigma = sigma,            # progression rate       
       gamma = gamma,            # recovery rate 
-      time_seed_omicron = which(all_dates == seed_omicron) # index to seed omicron
+      time_seed_omicron =       # index seed omicron
+        which(all_dates == seed_omicron) 
     ), 
   model = m1_EU 
 )
@@ -537,8 +539,9 @@ stan_fit_RK = run_stan_models(
       n_data = dim(sim_inc)[1],         # no. data 
       sigma = sigma,                    # progression rate  
       gamma = gamma,                    # recovery rate 
-      time_seed_omicron = which(all_dates == seed_omicron), # index seed omicron 
-      ts = 1:length(all_dates)          # time steps 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == seed_omicron),  
+      ts = ts                           # time steps 
     ), 
   model = m1_RK 
 )
@@ -604,10 +607,11 @@ stan_fit_EU2 = run_stan_models(
       n_pop = n_pop,                    # population
       n_recov = n_recov,                # recovered population 
       y = sim_inc$rep_inc,              # incidence data 
-      n_data = dim(rep_inc)[1],         # no. data 
+      n_data = dim(sim_inc)[1],         # no. data 
       sigma = sigma,                    # progression rate  
       gamma = gamma,                    # recovery rate 
-      time_seed_omicron = which(all_dates == seed_omicron), # index seed omicron 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == seed_omicron),  
       scale_time_step = 5               # amount to reduce time step
     ), 
   model = m1_EU2 
@@ -651,7 +655,7 @@ Now that we are confident in our models fitting to simulated data, lets fit to r
 
 We can get data on the reported incidence from GitHub, we just need to filter by date. 
 
-**Q10: fit both model variations to the real data *raw_data*. The *raw_data* is provided for all districts of South Africa between 05-03-2020 and 08-06-2022. The column GP refers to Gauteng. The data provided is cumulative so you will need to convert to daily incidence data.**
+**Q10: fit the EU model variation to the real data *raw_data*. The *raw_data* is provided for all districts of South Africa between 05-03-2020 and 08-06-2022. The column GP refers to Gauteng. The data provided is cumulative so you will need to convert to daily incidence data.**
 **N.b. use the second version of the Euler model, where we reduce the time step to improve accuracy (*model1_EU2* and *model1RK*)** 
 
 
@@ -660,15 +664,17 @@ We can get data on the reported incidence from GitHub, we just need to filter by
 
 
 ```{r}
-obs_inc = tidy_obs_inc(raw_data = raw_data,
+obs_inc = tidy_obs_inc(
+              raw_data = raw_data,
               date_seed = seed_omicron,
               end_date = end_date
               )
 
-plot(obs_inc$date,obs_inc$cases)
+ggplot(obs_inc, aes(x=date, y=rep_inc)) +
+     geom_point()
 ```
  
- **Fit the EU model to the observed data**
+ **Fit both models to the observed data**
 
 
 ```{r}
@@ -682,18 +688,141 @@ stan_fit_EU2_obs = run_stan_models(
       n_data = dim(obs_inc)[1],         # no. data 
       sigma = sigma,                    # progression rate  
       gamma = gamma,                    # recovery rate 
-      time_seed_omicron = which(all_dates == seed_omicron), # index seed omicron 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == seed_omicron),  
       scale_time_step = 5               # amount to reduce time step
     ), 
-  model = m1_EU2 
+  model = m1_EU2
+)
+
+diagnose_stan_fit(
+  stan_fit_EU2_obs, #
+  pars = c("rho", "beta", "I0"))
+
+plot_model_fit(
+  stan_fit_EU2_obs,
+  variable_model = "lambda_days",
+  variable_data  = "rep_inc",
+  data = obs_inc,
+  date_seed  = seed_omicron
+)
+
+```
+
+```{r}
+stan_fit_RK_obs = run_stan_models(
+  list_data =
+    list(
+      n_ts = length(all_dates),         # no. time steps 
+      n_pop = n_pop,                    # population
+      n_recov = n_recov,                # recovered population 
+      y = obs_inc$rep_inc,              # incidence data 
+      n_data = dim(obs_inc)[1],         # no. data 
+      sigma = sigma,                    # progression rate  
+      gamma = gamma,                    # recovery rate 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == seed_omicron),  
+      scale_time_step = 5,              # amount to reduce time step,
+       ts = 1:length(all_dates)         # time steps
+    ), 
+  model = m1_RK
+)
+
+diagnose_stan_fit(
+  stan_fit_RK_obs,
+  pars = c("rho","beta", "I0"))
+
+plot_model_fit(
+  stan_fit_RK_obs,
+  variable_model = "lambda",
+  variable_data  = "rep_inc",
+  data = obs_inc,
+  date_seed  = seed_omicron
 )
 ```
 
 
+So, if you fit the models to the observed data you can see that even though there were no model warnings and the chains have converged, the model is not fitting the data at all.
+
+SAY SOMETHING ABOUT THE BIVARIATE PLOTS 
+Looking at the parameter values, the model is converging on posterior distributions with very high $\rho$ values indicating almost all infected individuals are tested and isolate. Intuitively, we can imagine this is probably unlikely. Moreover, a sero-survey from Gauteng, South Africa estimated a 2-20 fold underreporting of cases, corresponding to a reporting rate <50% [5]. Therefore, lets amend the prior on $\rho$ to reflect this prior information. *model1_Euler_V3.stan*  has an updated $\rho$ priors: $\rho \sim Beta(1,4)$. Let's rerun the model to see if this improves things. 
+
+
+```{r}
+stan_fit_EU3_obs = run_stan_models(
+  list_data =
+    list(
+      n_ts = length(all_dates),         # no. time steps 
+      n_pop = n_pop,                    # population
+      n_recov = n_recov,                # recovered population 
+      y = obs_inc$rep_inc,              # incidence data 
+      n_data = dim(obs_inc)[1],         # no. data 
+      sigma = sigma,                    # progression rate  
+      gamma = gamma,                    # recovery rate 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == seed_omicron),  
+      scale_time_step = 5               # amount to reduce time step
+    ), 
+  model = m1_EU3
+)
+
+diagnose_stan_fit(
+  stan_fit_EU3_obs, #
+  pars = c("rho", "beta", "I0"))
+
+plot_model_fit(
+  stan_fit_EU3_obs,
+  variable_model = "lambda_days",
+  variable_data  = "rep_inc",
+  data = obs_inc,
+  date_seed  = seed_omicron
+)
+
+```
+The model is starting to fit the data but looking at the trace plots now we can see there is a multimodal posterior distribution. Chains 1 and 2 seem to be exploring an area of posterior space with a more reasonable $\rho$ value as well as a higher $I_{t0}$. Let's rerun the model for longer and also relax the prior on the number of initial infections; $I_{t0} \sim ND(1,50)$.
+
+
+
+```{r}
+stan_fit_EU4_obs = run_stan_models(
+  list_data =
+    list(
+      n_ts = length(all_dates),         # no. time steps 
+      n_pop = n_pop,                    # population
+      n_recov = n_recov,                # recovered population 
+      y = obs_inc$rep_inc,              # incidence data 
+      n_data = dim(obs_inc)[1],         # no. data 
+      sigma = sigma,                    # progression rate  
+      gamma = gamma,                    # recovery rate 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == seed_omicron),  
+      scale_time_step = 5               # amount to reduce time step
+    ), 
+  model = m1_EU4,
+  n_iter = 3000,
+  n_warmup = 1500
+)
+
+diagnose_stan_fit(
+  stan_fit_EU4_obs, #
+  pars = c("rho", "beta", "I0"))
+
+plot_model_fit(
+  stan_fit_EU4_obs,
+  variable_model = "lambda_days",
+  variable_data  = "rep_inc",
+  data = obs_inc,
+  date_seed  = seed_omicron
+)
+
+```
 
 # References 
+
+
 
 - (1) Madhi SA, Kwatra G, Myers JE, et al. Population Immunity and Covid-19 Severity with Omicron Variant in South Africa. N Engl J Med 2022; 386(14): 1314-26.
 - (2) Lavezzo E, Franchin E, Ciavarella C, et al. Suppression of a SARS-CoV-2 outbreak in the Italian municipality of Vo’. Nature 2020; 584(7821): 425-9.
 - (3) McAloon C, Collins Á, Hunt K, et al. Incubation period of COVID-19: a rapid systematic review and meta-analysis of observational research. BMJ Open 2020; 10(8): e039652.
 - (4) Liu, Y. & Rocklov, J. The reproductive number of the Delta variant of SARS-CoV-2 is far higher compared to the ancestral SARS-CoV-2 virus. J Travel Med 28, doi:10.1093/jtm/taab124 (2021).
+- (5) Mutevedzi, P. C. et al. Estimated SARS-CoV-2 infection rate and fatality risk in Gauteng Province, South Africa: a population-based seroepidemiological survey. Int J Epidemiol 51, 404-417, doi:10.1093/ije/dyab217 (2022).
