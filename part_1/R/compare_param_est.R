@@ -40,9 +40,9 @@ compare_param_est = function(
     mutate(model = c(rep("true", 3), rep(model_names[1], 3), rep(model_names[2],3))) 
   
   param_plots = list()
-  for(i in 1:length(pars)){
+  for(i in 1:length(parameter_names)){
     param_plots[[i]] =  param_df %>% 
-      filter(names == pars[[i]]) %>% 
+      filter(names == parameter_names[[i]]) %>% 
       ggplot(aes(x=names, y = mean))+
       geom_point(aes(color = model), position = position_dodge(width = 0.5)) +
       geom_errorbar(aes(ymin = lower, ymax = upper, color = model),
