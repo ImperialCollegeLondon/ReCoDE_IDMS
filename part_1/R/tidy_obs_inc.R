@@ -21,9 +21,12 @@ tidy_obs_inc = function(
   end_date,
   var = "GP"
 ){
-  var = sym(var)
   
-   reported_cases = raw_data %>%
+  library(tidyverse)
+  
+   var = sym(var)
+  
+   data_out = raw_data %>%
     select(date, var) %>%
     rename(cum_rep_inc = var) %>%
     # extract daily incidence from cumulative 
@@ -31,6 +34,7 @@ tidy_obs_inc = function(
     mutate(date = as.Date.character(date, format = "%d-%m-%Y")) %>%
     filter(date >= date_seed & date <= end_date)
    
-   return(reported_cases)
+   
+   return(data_out)
 }
 
