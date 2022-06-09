@@ -145,8 +145,8 @@ real[] SIR(real t,    // time
   
   
   beta ~ lognormal(0.8,0.5);
-  I0   ~ normal(1,5); 
-  rho  ~ beta(1,1);
+  I0 ~ normal(1,5); 
+  rho ~ beta(1,1);
   k    ~ exponential(0.01);
   }
   
