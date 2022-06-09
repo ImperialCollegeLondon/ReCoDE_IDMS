@@ -18,7 +18,8 @@ plot_model_fit = function(
  stan_fit,
  variable_model,
  variable_data,
- data 
+ data ,
+ date_seed
 ){
   
   # required package 
@@ -45,7 +46,7 @@ plot_model_fit = function(
   # here we make a variable from the rownames of our data, 
   # which account for the discarded unobserved data if using simulated data 
 
-  data$time = as.numeric(rownames(data))  
+  data$time = (1:dim(data)[1] ) +  which(all_dates == seed_omicron)
   
   ## create a name from the character string describing the variable to plot 
   variable_data = sym(variable_data)
@@ -56,7 +57,7 @@ plot_model_fit = function(
    ggplot(aes(x = time , y = !!variable_data)) +
    geom_point()+
    geom_line(aes(y=mean)) +
-   geom_ribbon(aes(ymin=lower,ymax=upper)) 
+   geom_ribbon(aes(ymin=lower,ymax=upper), alpha =0.2) 
   
   return(plot)
 }
