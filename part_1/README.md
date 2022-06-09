@@ -53,6 +53,8 @@ This folder contains the compartmental models used in part 1.
 
 - *model1_Euler_V2.stan*: a Stan model which solves the ODEs using the Euler method at a used defined time step. 
 
+- *model1_Euler_V3.stan* and *model1_Euler_V4.stan* are modified versions of *model1_Euler_V2.stan*.
+
 - *model1_RK_V1.stan*: a Stan model which solves the ODEs using the Runge-Kutta Method. 
 
 
