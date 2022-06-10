@@ -62,7 +62,7 @@ Moreover, each module will be accompanied  by lots of internal and external lear
 
 @@ How to Use the Code @@
 
-** Requirements **
+! Requirements
 
 - R (version XXX or higher)
 - RStudio (if needed)
@@ -70,3 +70,7 @@ Moreover, each module will be accompanied  by lots of internal and external lear
   - rstan
   - others (for example ....)
 
+! example:
+```
+
+** XXXXX **
