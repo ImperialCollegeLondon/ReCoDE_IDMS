@@ -60,7 +60,7 @@ Moreover, each module will be accompanied  by lots of internal and external lear
 
 ```diff 
 
-@@How to Use the Code@@
+@@ How to Use the Code @@
 
 ** Requirements **
 
