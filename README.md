@@ -71,6 +71,5 @@ Moreover, each module will be accompanied  by lots of internal and external lear
   - others (for example ....)
 
 ! example:
++ XXXXXX
 ```
-
-** XXXXX **
