@@ -114,7 +114,7 @@ for (t in time_seed_omicron:n_ts) lambda_fit[(t-time_seed_omicron+1)] = lambda_d
  // priors
   
   beta ~ lognormal(0.8,0.5);
-  I0 ~ normal(1,10); 
+  I0 ~ normal(1,5); 
   rho ~ beta(1,4);
   k ~ exponential(0.01);
   

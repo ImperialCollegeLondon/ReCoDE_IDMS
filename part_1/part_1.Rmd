@@ -1,8 +1,8 @@
 ---
 title: "Part 1"
-author: "Bethan Cracknell Daniels"
-date: "30/05/2022"
-output: html_document
+output: 
+  html_document:
+    keep_md: true
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +18,7 @@ Hopefully, this project will show how we design an infectious disease compartmen
 
 ##### Some questions include:
 
-- what are the most important disease and epi features?
+- what are the most important disease and epidemiological features?
 - how do we represent these features in a model?
 - what data do I need?
 - what parameters should I estimate? 
@@ -127,7 +127,7 @@ So, now lets design the model!
 
 #### Step 1: Define the reseach question
 
-![](images/1.png)
+What are the the transmission dynamics of the Omicron variant of concern following its emergence?
 
 ### Step 2: What is the population and time period?
 
@@ -137,13 +137,11 @@ We know that Omicron was first detected in October 2021, but we suspect that the
 
 We want to explore the dynamics during the 4th Omicron driven wave. If you look at [this](https://covid19.who.int/region/afro/country/za) dashboard provided by the WHO, we can see that the 4th wave was over by ~February. We will run our model till the 23rd of February to make sure we capture all of the epidemic curve. 
 
-![](images/2.png)
 
 ### Step 3: What data are we fitting the model to?
 
-We are going to fit to the *reported* incidence of SARS-CoV-2. 
+We are going to fit to the *reported* incidence of SARS-CoV-2 for Gauteng, South Africa. We need to reconstruct the reported incidence from the model. 
 
-![](images/3.png)
 
 ### Step 4: What compartments do we minimally need to represent the disease transmission process? 
 
@@ -153,28 +151,23 @@ Starting with the SIR model, we want to account for the [incubtion period](https
 **Q2: draw out a compartmental model which accounts for the above**
 
 
-**A2:**
-
-![](images/4.png)
-
 ### Step 5: What are the initial conditions? What do we want to estimate? What do we want to fix?
 
 Our population = $N$ = 15810388. We can assume that $E_{t0}$ and $Q_{t0}$ = 0. 
 
-As we are fitting to the 4th wave of SARS-CoV-2 in Gauteng, we know some of the population will already have had an infection and have immunity, so they go in the $R$ compartment. We can look to seroprevalence surveys for data on the percentage of the population with immunity.56.2% of the unvaccinated population of Gauteng had antibodies to SARS-CoV-2 in December 2021 [1]. Note, this is slightly after the emergence of Omicron but it is the best data we have for now. 
+As we are fitting to the 4th wave of SARS-CoV-2 in Gauteng, we know some of the population will already have had an infection and have immunity, so they go in the $R$ compartment. We can look to seroprevalence surveys for data on the percentage of the population with immunity.56.2% of the unvaccinated population of Gauteng had antibodies to SARS-CoV-2 in December 2021 [1]. Note, this is slightly after the emergence of Omicron but it is the best data we have for now. So:
 
-So $$R_{t0} = 15,810,388  *  0.562 = 8,885,438$$
+$$R_{t0} = 15,810,388  *  0.562 = 8,885,438$$
 
 We don't know how many initial infections where were or exactly what time period Omicron emerged, so we will estimate $I_{t0}$. 
 
 Finally, $$S_{t0} = N - R_{t0} - I_{t0}$$ 
 
-![](images/5.png)
 
 ### Step 6: What are the rate parameters which describe movement between the compartments?
 
 
-![](images/6.png)
+![](images/SEIQR comp model.png)
 
 Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is a probability. All individuals will progress to be infectious at an average rate of $\sigma$ and some $\rho$ % will be tested and reported.
 
@@ -182,15 +175,13 @@ Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is
 
 ### Step 7: What are the equations that govern the model?
 
-![](images/7.png)
+![](images/ODE equations.png)
 
 Once you have a flow diagram with rates, writing the equations is simple! Arrows out of a state are subtracted, arrows into a stated are added. A good check is to make sure the equations balance. 
 
 ### Step 8: Which parameters can we fix based on the literature?
 
-![](images/8.png)
-
-The incubation and infectious period are well defined for previous SARS-CoV-2 variants, and we will assume (at least for now) that they are the same for the new Omicron variant. We therefore assume an average incubation period $1/σ$ of 5.1 days [2] and an average infectious period $1/γ$ of 2.1 days [3]. 
+The incubation and infectious period are well defined for previous SARS-CoV-2 variants, and we will assume (at least for now) that they are the same for the new Omicron variant. We therefore assume an average incubation period $\frac{1}{\sigma}$ of 5.1 days [2] and an average infectious period $\frac{1}$ of 2.1 days [3]. 
 
 ### Step 9: Which parameters do we need to estimate?
 
@@ -199,9 +190,6 @@ By process of elimination, we are going to estimate $\beta$ and $\rho$.
 
 **Q3: why would we want to estimate these parameters?**
 
-**A3**
-
-![](images/9.png)
 
 ### Step 10: Do we have any domain knowledge to inform the parameter priors?
 
@@ -218,7 +206,14 @@ plot(density(samp))
 ```
  
 
-For $\beta$ we are not sure how transmissible Omicron is yet, but we think somewhere similar or more transmissible than the Delta variant. A useful measure of transmission is the [Reproduction number](https://en.wikipedia.org/wiki/Basic_reproduction_number) ($R_0$), the average number of secondary cases produced per infectious individual in an susceptible population. The $R_0$ is equal to the rate that individuals are infectious / the rate they recover. For a simple SIR model this would be $R_0 = \frac{\beta}{\gamma}$. For our model $R_0 = \frac{(1-\rho)\beta}{\gamma}$. This can be confirmed using the [next generation matrices method](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2871801/#:~:text=The%20basic%20reproduction%20number%20%E2%84%9B,categories%20of%20individuals%20are%20recognized), if interested. The $R_0$ of Delta is estimated around 5 [4], so exploring values of $\beta$ that correspond to an $R_0$ of 5 and higher seems reasonable.
+For $\beta$ we are not sure how transmissible Omicron is yet, but we think somewhere similar or more transmissible than the Delta variant. A useful measure of transmission is the [Reproduction number](https://en.wikipedia.org/wiki/Basic_reproduction_number) ($R_0$), the average number of secondary cases produced per infectious individual in an susceptible population. The $R_0$ is equal to the rate that individuals are infectious / the rate they recover. For a simple SIR model this would be:
+
+$$R_0 = \frac{\beta}{\gamma}$$ 
+
+For our model: 
+
+$$R_0 = \frac{(1-\rho)\beta}{\gamma}$$
+This can be confirmed using the [next generation matrices method](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2871801/#:~:text=The%20basic%20reproduction%20number%20%E2%84%9B,categories%20of%20individuals%20are%20recognized), if interested. The $R_0$ of Delta is estimated around 5 [4], so exploring values of $\beta$ that correspond to an $R_0$ of 5 and higher seems reasonable.
 
 
 **Q5: Define a prior for $\beta$ which supports $R_0$ values between 1 and at least ~12, given $\rho$ values between 0 and 1.**
@@ -251,12 +246,10 @@ quantile(R0_p,  probs = c(0.025,0.1,0.25, 0.5, 0.75,0.9,0.975))
 plot(density(R0_p))
 ```
 
-**We can see that $\beta \sim Lognormal(0.8,0.5)$ supports $\R0$ values mostly between 1 and 13, but allow for extreme values of $R0$ if the data supports it.** 
+**We can see that $\beta \sim Lognormal(0.8,0.5)$ supports $R_0$ values mostly between 1 and 13, but allow for extreme values of $R_0$ if the data supports it.** 
 
 
 Finally, we will assume that Omicron was seeded by very few individuals given Gauteng: $I_0 \sim Normal(1,5)$. Note, that although this allows for negative values, we can set parameter bounds in Stan which will ensure the seed is positive. 
-
-![](images/10.png)
 
 ### Step 11: What is the model likelihood?
 
@@ -267,21 +260,29 @@ $$ y \sim NegBin(\lambda, \kappa) $$
 
 This means we need to additionally estimate $\kappa$. We will assume  for which we will assume the prior $\kappa \sim exp(0.01)$ which allows for a wide range of values reflecting our uncertainty. 
 
-![](images/11.png)
+
 
 ### Step 12: What assumptions have we made?
 
-These are just some of the assumptions, there are plenty more to think about!
+Some of the assumptions include:
 
-![](images/12.png) 
+* All reported incidence is the Omicron variant
+* No waning immunity
+* No vaccination
+* No pre-symptomatic transmission
+* All tested individuals isolate with 100% compliance
 
 
-**Now we have designed our first infectious disease model, we can get onto coding it! **
+Putting all of the steps together, we have:
+
+
+![](images/Omicron model 1 story board.png)
+
+**Now we have designed our first infectious disease model, we can get onto coding it!**
 
 
 
 
-# Stan models 
 
 If you aren't familiar with Stan I recommend watching [this](https://www.youtube.com/watch?v=YZZSYIx1-mw&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=72) and [this](https://www.youtube.com/watch?v=a-wydhEuAm0&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=69) for an introduction into coding a Stan model and the Hamiltonian Monte Carlo algorithm - the algorithm which will sample our posterior distribution. 
 
