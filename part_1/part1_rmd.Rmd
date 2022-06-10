@@ -572,7 +572,7 @@ RK_plot
 
 **A8: Lets plot our original values, alongside the mean and 95% CrI of the posterior distributions of our estimated parameters, using the function *compare_param_est* **
   
-```{r message=FALSE}
+```{r message=FALSE, warning=FALSE}
 compare_param_est(
   parameter_names = c("beta", "rho", "I0"), # parameters to compare 
   true_param_values = c(beta, rho, n_inf),  # true values
@@ -632,7 +632,7 @@ EU2_diag
 ```
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 EU2_plot = plot_model_fit(stan_fit_EU2, "lambda_days", "rep_inc", sim_inc)
 
 EU2_plot
@@ -640,8 +640,7 @@ EU2_plot
 
 **Finally, lets compare parameter estimates again**
 
-```{r}
-
+```{r message=FALSE, warning=FALSE}
 compare_param_est(
   parameter_names = c("beta", "rho", "I0"),
   true_param_values = c(beta, rho, n_inf),
@@ -663,7 +662,7 @@ Now that we are confident in our models fitting to simulated data, lets fit to r
 
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 obs_inc = tidy_obs_inc(
               raw_data = raw_data,
               date_seed = seed_omicron,
@@ -698,7 +697,9 @@ stan_fit_EU2_obs = run_stan_models(
 diagnose_stan_fit(
   stan_fit_EU2_obs, #
   pars = c("rho", "beta", "I0"))
+```
 
+```{r message=FALSE, warning=FALSE}
 plot_model_fit(
   stan_fit_EU2_obs,
   variable_model = "lambda_days",
@@ -742,7 +743,7 @@ This time we received warnings about the $R_{hat}$ and ESS, indicating the chain
 Looking at the model fit, we can see it is starting to fit the data, indicating we are on the right path. 
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 plot_model_fit(
   stan_fit_EU3_obs,
   variable_model = "lambda_days",
@@ -781,6 +782,10 @@ diagnose_stan_fit(
   stan_fit_EU4_obs, #
   pars = c("rho", "beta", "I0"))
 
+```
+No warnings and the diagnostic plots look good. 
+
+```{r message=FALSE, warning=FALSE}
 plot_model_fit(
   stan_fit_EU4_obs,
   variable_model = "lambda_days",
@@ -788,9 +793,10 @@ plot_model_fit(
   data = obs_inc,
   date_seed  = seed_omicron
 )
-
 ```
-No warnings and the diagnostic plots look good. The model fitting is better, although it is still not capturing the timing or height of the peak. 
+
+
+The model fitting is better, although it is still not capturing the timing or height of the peak. 
 
 **Bonus activity: See if you can improve the model fit further. You could try seeing the model earlier and later than 1 month, to see if that helps!**
 
