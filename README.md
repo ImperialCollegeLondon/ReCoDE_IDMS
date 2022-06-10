@@ -56,7 +56,9 @@ The **figures folder** is where we will save all our model fits.
 
 Moreover, each module will be accompanied  by lots of internal and external learning resources! 
 
-##### How to Use the Code
+##### 
+
+```diff @@How to Use the Code@@
 
 ** Requirements **
 
