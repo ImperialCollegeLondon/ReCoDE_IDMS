@@ -18,7 +18,7 @@ Beneficial:
 ### Useful external resources:
 
 - [Bayesian workflow for disease transmission modeling in Stan](https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html#2_using_simulated_data_to_understand_our_model)
-- [A students guide to Bayesian statistics is accomponied by a lecture course on youtube](https://www.youtube.com/playlist?list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG)
+- [A students guide to Bayesian statistics is accompanied by a lecture course on youtube](https://www.youtube.com/playlist?list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG)
 
 
 ### Intended learning outcomes
