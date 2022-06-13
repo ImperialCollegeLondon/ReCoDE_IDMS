@@ -11,23 +11,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction 
 
-Hi and welcome to the first SARS-CoV-2 model in this exampler. The overall aim of this script is to fit a Susceptible (S) - Exposed (E) - Infectious (I) - Quarantine (Q) - Recovered (R) model to real incidence and genomic data collected in Gauteng, South Africa between late 2021 and early 2022. 
+Hi and welcome to the first SARS-CoV-2 model in this exemplar. The overall aim of this script is to fit a Susceptible (S) - Exposed (E) - Infectious (I) - Quarantine (Q) - Recovered (R) model to incidence data collected in Gauteng, South Africa between late 2021 and early 2022. 
 
 
-Hopefully, this project will show how we design an infectious disease compartmental model to answer a public health questions. There are many choices to be made along the way so it is important to think about the assumptions we are making so our model is robust. 
+This tutorial will show how we design an infectious disease compartmental model. There are many choices to be made along the way so it is important to think about the assumptions we are making so our model is robust. 
 
 ##### Some questions include:
 
 - what are the most important disease and epidemiological features?
 - how do we represent these features in a model?
-- what data do I need?
 - what parameters should I estimate? 
 
-As well as designing a model, we will also simulate fake data to check our model works, explore different methods of solving ordinary differential equations (ODEs) in Stan, check our Stan model is fitting well and produce some nice epi curves! 
+We will first use simulated data to check our model works (i.e. can reproduce the parameter estimates used to generate the data). In this tutorial we will explore different methods of solving ordinary differential equations (ODEs) in Stan, showcase how to run performance checks and produce some nice epicurves and visualizations! 
 
-This code also aims to be reusable, sustainable and testable - important features often overlooked in R! 
+This code also aims to be reusable, sustainable and testable - this latter is an important features often overlooked in R! 
 
-First, we need to load some packages. We also need to source the functions needed to run this script, found in the *R* folder and read in the raw incidence data. Finally, we need to compile the Stan models, found in the *models* folder. 
+First, we need to load some packages. We also need to source the functions needed to run this script - these are found in the *R* folder - and read in the raw incidence data. Finally, we need to compile the Stan models, which is found in the *models* folder. 
 
 ```{r message=FALSE, warning=FALSE}
 
