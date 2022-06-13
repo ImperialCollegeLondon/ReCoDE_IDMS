@@ -6,6 +6,9 @@ output:
 ---
 
 
+```r
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/', echo = TRUE)
+```
 
 # Introduction 
 
@@ -179,7 +182,7 @@ Once you have a flow diagram with rates, writing the equations is simple! Arrows
 
 ### Step 8: Which parameters can we fix based on the literature?
 
-The incubation and infectious period are well defined for previous SARS-CoV-2 variants, and we will assume (at least for now) that they are the same for the new Omicron variant. We therefore assume an average incubation period $\frac{1}{\sigma}$ of 5.1 days [2] and an average infectious period $\frac{1}$ of 2.1 days [3]. 
+The incubation and infectious period are well defined for previous SARS-CoV-2 variants, and we will assume (at least for now) that they are the same for the new Omicron variant. We therefore assume an average incubation period $\frac{1}{\sigma}$ of 5.1 days [2] and an average infectious period $\frac{1}{\gamma}$ of 2.1 days [3]. 
 
 ### Step 9: Which parameters do we need to estimate?
 
@@ -204,7 +207,7 @@ samp = rbeta(1000000,1,1)
 plot(density(samp))
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+![](Figs/unnamed-chunk-2-1.png)<!-- -->
  
 
 For $\beta$ we are not sure how transmissible Omicron is yet, but we think somewhere similar or more transmissible than the Delta variant. A useful measure of transmission is the [Reproduction number](https://en.wikipedia.org/wiki/Basic_reproduction_number) ($R_0$), the average number of secondary cases produced per infectious individual in an susceptible population. The $R_0$ is equal to the rate that individuals are infectious / the rate they recover. For a simple SIR model this would be:
@@ -262,7 +265,7 @@ quantile(R0_p,  probs = c(0.025,0.1,0.25, 0.5, 0.75,0.9,0.975))
 plot(density(R0_p))
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+![](Figs/unnamed-chunk-3-1.png)<!-- -->
 
 **We can see that $\beta \sim Lognormal(0.8,0.5)$ supports $R_0$ values mostly between 1 and 13, but allow for extreme values of $R_0$ if the data supports it.** 
 
@@ -442,7 +445,7 @@ sim_data = simulate_data (
 )
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-6-1.png)<!-- -->![](part_1_files/figure-html/unnamed-chunk-6-2.png)<!-- -->![](part_1_files/figure-html/unnamed-chunk-6-3.png)<!-- -->![](part_1_files/figure-html/unnamed-chunk-6-4.png)<!-- -->![](part_1_files/figure-html/unnamed-chunk-6-5.png)<!-- -->
+![](Figs/unnamed-chunk-6-1.png)<!-- -->![](Figs/unnamed-chunk-6-2.png)<!-- -->![](Figs/unnamed-chunk-6-3.png)<!-- -->![](Figs/unnamed-chunk-6-4.png)<!-- -->![](Figs/unnamed-chunk-6-5.png)<!-- -->
 
 ### Calculating reported incidence 
 
@@ -462,7 +465,7 @@ sim_inc = simulated_data[[1]]
 simulated_data[[2]] # plot of reported incidence 
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](Figs/unnamed-chunk-7-1.png)<!-- -->
 
 
 ## Model fitting
@@ -511,7 +514,7 @@ stan_fit_EU = run_stan_models(
 ```
 
 ```
-## Time difference of 41.46263 secs
+## Time difference of 1.686194 mins
 ```
 
 
@@ -527,7 +530,7 @@ To be on the safe side, lets check with some model diagnostics. *diagnose_stan_f
 EU_diag = diagnose_stan_fit(stan_fit_EU, pars = c("beta", "rho", "I0"))
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](Figs/unnamed-chunk-9-1.png)<!-- -->
 
 ```r
 EU_diag
@@ -537,14 +540,14 @@ EU_diag
 ## $`markov chain trace plots`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-9-2.png)<!-- -->
+![](Figs/unnamed-chunk-9-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-9-3.png)<!-- -->
+![](Figs/unnamed-chunk-9-3.png)<!-- -->
 
 ```
 ## 
@@ -576,12 +579,16 @@ We then plot these against our simulated data, over time.
 
 
 ```r
-EU_plot = plot_model_fit(stan_fit_EU, variable_model = "lambda", variable_data = "rep_inc",  sim_inc)
+EU_plot = plot_model_fit(stan_fit_EU,
+                         variable_model = "lambda",
+                         variable_data = "rep_inc",
+                         data = sim_inc,
+                         date_seed = which(all_dates == seed_omicron))
 
 EU_plot
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](Figs/unnamed-chunk-10-1.png)<!-- -->
 
 
 ### Fitting using the Runge-Kutta Method
@@ -614,7 +621,7 @@ stan_fit_RK = run_stan_models(
 ```
 
 ```
-## Time difference of 8.724825 mins
+## Time difference of 14.25304 mins
 ```
 
 **Diagnostics still look good.**
@@ -623,7 +630,7 @@ stan_fit_RK = run_stan_models(
 RK_diag = diagnose_stan_fit(stan_fit_RK, pars = c("beta", "rho", "I0"))
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-12-1.png)<!-- -->
+![](Figs/unnamed-chunk-12-1.png)<!-- -->
 
 ```r
 RK_diag
@@ -633,14 +640,14 @@ RK_diag
 ## $`markov chain trace plots`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-12-2.png)<!-- -->
+![](Figs/unnamed-chunk-12-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-12-3.png)<!-- -->
+![](Figs/unnamed-chunk-12-3.png)<!-- -->
 
 ```
 ## 
@@ -658,12 +665,16 @@ RK_diag
 **As does the model plot.**
 
 ```r
-RK_plot = plot_model_fit(stan_fit_RK, "lambda", "rep_inc", sim_inc)
+RK_plot = plot_model_fit(stan_fit_RK,
+                        variable_model = "lambda",
+                        variable_data = "rep_inc",
+                        data =  sim_inc,
+                        date_seed = which(all_dates == seed_omicron))
 
 RK_plot
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](Figs/unnamed-chunk-13-1.png)<!-- -->
 
 
 
@@ -689,21 +700,21 @@ compare_param_est(
 ## [[1]]
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](Figs/unnamed-chunk-14-1.png)<!-- -->
 
 ```
 ## 
 ## [[2]]
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-14-2.png)<!-- -->
+![](Figs/unnamed-chunk-14-2.png)<!-- -->
 
 ```
 ## 
 ## [[3]]
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-14-3.png)<!-- -->
+![](Figs/unnamed-chunk-14-3.png)<!-- -->
 
 **Both methods recover the parameter estimate for $\rho$, although the Euler method is subject to more uncertainty. The RK method is also more accurate than the Euler method at recovering the values for $\beta$ and $I_0$. Remember that the bivariate marginal posterior distributions plots for both methods showed strong correlation between $\beta$, $\rho$ and $I0$, indicating the uncertainty in these parameter's posteriors are correlated given the data. It is also important to remember that the data is generated using a single parameter value, whereas in Bayesian modelling we consider parameters to be distributions, not fixed values. This highlights the limitations of using a single simulated data set, how do we decide if the posterior distribution is close enough to the "correct" value? Nevertheless, we can see that the RK method is more accurate than the Euler method** 
 
@@ -744,7 +755,7 @@ stan_fit_EU2 = run_stan_models(
 ```
 
 ```
-## Time difference of 3.916338 mins
+## Time difference of 5.378222 mins
 ```
 **Even reducing the step size by a factor of 5-fold, the run time is ~3x faster than the RK method.**
 
@@ -755,7 +766,7 @@ stan_fit_EU2 = run_stan_models(
 EU2_diag = diagnose_stan_fit(stan_fit_EU2, pars = c("beta", "rho", "I0"))
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-16-1.png)<!-- -->
+![](Figs/unnamed-chunk-16-1.png)<!-- -->
 
 ```r
 EU2_diag
@@ -765,14 +776,14 @@ EU2_diag
 ## $`markov chain trace plots`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-16-2.png)<!-- -->
+![](Figs/unnamed-chunk-16-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-16-3.png)<!-- -->
+![](Figs/unnamed-chunk-16-3.png)<!-- -->
 
 ```
 ## 
@@ -790,12 +801,16 @@ EU2_diag
 
 
 ```r
-EU2_plot = plot_model_fit(stan_fit_EU2, "lambda_days", "rep_inc", sim_inc)
+EU2_plot = plot_model_fit(stan_fit_EU2,
+                          variable_model = "lambda_days", 
+                          variable_data = "rep_inc",
+                          data = sim_inc,
+                          date_seed = which(all_dates == seed_omicron))
 
 EU2_plot
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](Figs/unnamed-chunk-17-1.png)<!-- -->
 
 **Finally, lets compare parameter estimates again**
 
@@ -813,21 +828,21 @@ compare_param_est(
 ## [[1]]
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+![](Figs/unnamed-chunk-18-1.png)<!-- -->
 
 ```
 ## 
 ## [[2]]
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-18-2.png)<!-- -->
+![](Figs/unnamed-chunk-18-2.png)<!-- -->
 
 ```
 ## 
 ## [[3]]
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-18-3.png)<!-- -->
+![](Figs/unnamed-chunk-18-3.png)<!-- -->
 
 
 
@@ -854,7 +869,7 @@ ggplot(obs_inc, aes(x=date, y=rep_inc)) +
      geom_point()
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-19-1.png)<!-- -->
+![](Figs/unnamed-chunk-19-1.png)<!-- -->
  
  **Fit the model to the observed data**
 
@@ -880,29 +895,29 @@ stan_fit_EU2_obs = run_stan_models(
 ```
 
 ```
-## Time difference of 10.45955 mins
+## Time difference of 13.30793 mins
 ```
 
 ```r
 diagnose_stan_fit(
-  stan_fit_EU2_obs, #
+  stan_fit_EU2_obs, 
   pars = c("rho", "beta", "I0"))
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
+![](Figs/unnamed-chunk-20-1.png)<!-- -->
 
 ```
 ## $`markov chain trace plots`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-20-2.png)<!-- -->
+![](Figs/unnamed-chunk-20-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-20-3.png)<!-- -->
+![](Figs/unnamed-chunk-20-3.png)<!-- -->
 
 ```
 ## 
@@ -924,11 +939,11 @@ plot_model_fit(
   variable_model = "lambda_days",
   variable_data  = "rep_inc",
   data = obs_inc,
-  date_seed  = seed_omicron
+  date_seed   =  which(all_dates == seed_omicron)
 )
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+![](Figs/unnamed-chunk-21-1.png)<!-- -->
 
 So, if you fit the model to the observed data you should find that even though there were no model warnings and the chains have converged, the model is not fitting the data at all.
 
@@ -983,7 +998,7 @@ stan_fit_EU3_obs = run_stan_models(
 ```
 
 ```
-## Time difference of 9.420677 mins
+## Time difference of 13.10484 mins
 ```
 
 ```r
@@ -992,20 +1007,20 @@ diagnose_stan_fit(
   pars = c("rho", "beta", "I0"))
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
+![](Figs/unnamed-chunk-22-1.png)<!-- -->
 
 ```
 ## $`markov chain trace plots`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-22-2.png)<!-- -->
+![](Figs/unnamed-chunk-22-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-22-3.png)<!-- -->
+![](Figs/unnamed-chunk-22-3.png)<!-- -->
 
 ```
 ## 
@@ -1031,11 +1046,11 @@ plot_model_fit(
   variable_model = "lambda_days",
   variable_data  = "rep_inc",
   data = obs_inc,
-  date_seed  = seed_omicron
+  date_seed  =  which(all_dates == seed_omicron)
 )
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
+![](Figs/unnamed-chunk-23-1.png)<!-- -->
 
 
 Let's rerun the model for longer and also relax the prior on the number of initial infections; $I_{t0} \sim ND(1,50)$.
@@ -1065,7 +1080,7 @@ stan_fit_EU4_obs = run_stan_models(
 ```
 
 ```
-## Time difference of 3.062803 mins
+## Time difference of 4.324294 mins
 ```
 
 ```r
@@ -1074,20 +1089,20 @@ diagnose_stan_fit(
   pars = c("rho", "beta", "I0"))
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+![](Figs/unnamed-chunk-24-1.png)<!-- -->
 
 ```
 ## $`markov chain trace plots`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-24-2.png)<!-- -->
+![](Figs/unnamed-chunk-24-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-24-3.png)<!-- -->
+![](Figs/unnamed-chunk-24-3.png)<!-- -->
 
 ```
 ## 
@@ -1110,19 +1125,22 @@ plot_model_fit(
   variable_model = "lambda_days",
   variable_data  = "rep_inc",
   data = obs_inc,
-  date_seed  = seed_omicron
+  date_seed  =  which(all_dates == seed_omicron)
 )
 ```
 
-![](part_1_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+```
+## Joining, by = "time"
+```
+
+![](Figs/unnamed-chunk-25-1.png)<!-- -->
 
 
-The model fitting is better, although it is still not capturing the timing or height of the peak. 
+The model fitting is better, although it is still not capturing the timing or height of the peak. Let's revisit some of our assumptions. We currently assume that individuals infected with SARS-CoV-2 prior to the emergence of Omicron have immunity (R comaprtment). However, there is evidence
 
-**Bonus activity: See if you can improve the model fit further. You could try seeing the model earlier and later than 1 month, to see if that helps!**
+Perhaps we not able to capture the transmission dynamics of Omicron because we are missing vital aspects from our model. In part 2 we will account for this by fitting the model to multiple variants, not just Omicron, capturing the transmission dynamics over a longer time period and accounting for vaccination and interventions as well! See you there. 
 
- 
-The alternative is to revisit some of our assumptions. Perhaps we not able to capture the transmission dynamics of Omicron because we are missing vital aspects from our model. In part 2 we will account for this by fitting the model to multiple variants, not just Omicron, capturing the transmission dynamics over a longer time period and accounting for vaccination and interventions as well! See you there. 
+
 
 # References 
 
