@@ -46,7 +46,6 @@ source("R/tidy_obs_inc.R")
 
 
 # Data 
-
 raw_data = read.csv("reported_incidence_data_Gauteng.csv")
 
 # Models
@@ -67,56 +66,55 @@ First, lets take a look at the storyboard below. It outlines some of the key ste
 
 
 
-Briefly, we need to define our research question (1), population and time period (2). Then we need to think about what data we will fit our model to (3). Incidence data? Prevalence data?
+Briefly, we need to define (1) our research question, (2) population and time period. Then we need to think about (3) how our model can reproduce the observed data. Are we modelling incidence or prevalence data?
 
-Next, building the compartmental model (4). Compartmental models are the bread and butter of infectious disease modelling. They are a simple system of differential equations which describe the movement of individuals from one state to another. In the figure we show an SIR model, the most simple model typically used. Individuals in a population start out susceptible to a disease, they have no prior exposure to the disease and so no protective immunity. This is the S compartment. From there, individuals may be exposed and infected by the pathogen, at which point they enter the I compartment. Finally, they recover from the disease and are no longer infectious, they enter the R compartment. 
+Next, we need to (4) design the compartmental model. Compartmental models are the bread and butter of infectious disease modelling. They are a system of differential equations which describe the flows of individuals from one infectious state to another and represent the infection history. In the figure we show an SIR model, the most simple model typically used. In this model we often assume that individuals in a population start out susceptible to a disease, i.e.,  they have no prior protective immunity. This is the S compartment. From there, individuals may be infected by the pathogen, at which point they are also infectious and enter the I compartment. Finally, when they recover from the disease and are no longer infectious, they enter the R compartment. 
 
 I will assume you are familiar with compartmental models and so won't go into further detail here. If you are not so familiar, there are lots of good resources out there which already explain SIR models. 
 
 For instance, Imperial has a module on SIR modules on [Coursera](https://www.coursera.org/lecture/developing-the-sir-model/introduction-to-the-sir-model-FXISd?redirectTo=%2Flearn%2Fdeveloping-the-sir-model%3Faction%3Denroll). Or there are an abundance of videos on YouTube where people introduce SIR models, especially since COVID-19. [This](https://www.youtube.com/watch?v=Qrp40ck3WpI) is a nice intro! 
 
-Having designed the model, we need to think about the initial conditions for each state (5). If an infectious agent is entirely new to a population, like SARS-CoV-2 was at the start of 2020, we would expect all of the population to be in the S compartment, with a few individuals in the infectious compartment: 
+Having designed the model, we need to (5) think about the initial conditions for each state. If an infectious agent is entirely new to a population, like SARS-CoV-2 was at the start of 2020, we would expect all of the population to be in the S compartment, with a few individuals in the infectious compartment: 
 $$S = N - I_0$$ 
 
-If the in pathogen is not novel, then we might expect some of the population to be in the recovered compartment. Critically, the sum of all the compartments must equal the population, $$S + I + R = N$$ 
+If the in pathogen is not novel and there is prior immunity, then we might expect some of the population to be in the recovered compartment. Critically, the sum of all the compartments must equal the population size, $$S + I + R = N$$ 
 
-The flow between the compartments is governed by rates (6). In this example, we have the transmission rate, typically denoted $\beta$ and the recovery rate, $\gamma$. Note that because transmission depends on the number of infectious people we need to account for this. Hence, the force of infection (the per capita rate that susceptible indviduals contract the infection) depends on the prevalance of infectious people  and the transmission rate:
+The flow between the compartments is governed by rates (6). In this example, we have the transmission rate, typically denoted $\beta$ and the recovery rate, $\gamma$. Note that because transmission depends on the number of infectious people we need to account for this. Hence, the force of infection (the per capita rate that susceptible individuals contract the infection) depends on he transmission rate and on the number of infectious people:
 
-$$\lambda = \frac{I}{N} \beta$$
+$$\lambda = \beta\frac{I}{N} $$
 
-Next, converting our model diagram into ODE equations (7). Simply, arrows leading out of a compartment are subtraction and arrows leading into a compartment are addition. 
+Next, we need to (7) convert our flow diagram into ODE equations. Simply, arrows leading out of a compartment represent subtractions and arrows leading into a compartment represent additions. 
 
-After that, we need to decide which parameters we want to fix (8) and which we want to estimate (9). This likely depends on the research question and available literature.
+After that, we need to decide (8) which parameters we want to fix and (9) which we want to estimate. This likely depends on the research question and available data and parameter estimates in the literature.
 
-As we conducting Bayesian modelling, the next decisions we need to make are about the priors (10) and likelihood (11). Hopefully you are familiar with Bayesian statistics, but if not then I recommend going back to some of the resources suggested at the top, namely A students guide to Bayesian Statistics! 
+As we are fitting the model using Bayesian inference, the next decisions we need to make are about the priors (10) and likelihood (11). Hopefully you are familiar with Bayesian statistics, but if not then I recommend going back to some of the resources suggested at the top, namely 'A students guide to Bayesian Statistics'! 
 
 Briefly, what we are asking is, given the data $y$, what are the most likely parameters $\theta$. *Note, when we talk of parameters here, this refers to those we are estimating, not the fixed parameters*. 
 
-In other words, our posterior is $Pr(\theta|y)$. Bayes rule tells us that:
+In other words, our posterior distribution is $Pr(\theta|y)$. Bayes rule tells us that:
 
 $$
 Pr(\theta | y) \propto Pr(y | \theta) Pr(\theta)
 $$
 
-Where, $Pr(y | \theta)$ is the likelihood, or sampling distribution, and $Pr(\theta)$ are our priors. The likelihood tells us how to generate our data $y$, given our model parameters. Our priors allow us to incorporate existing domain knowledge into the model. 
+Where, $Pr(y | \theta)$ is the likelihood, or sampling distribution, and $Pr(\theta)$ is our prior distribution. The likelihood tells us how to generate our data $y$, given our model parameters. Our prior distributions allow us to incorporate existing domain knowledge into the model. 
 
-Generally, we want priors to be vague enough to explore all reasonable parameter values whilst preventing the sampler exploring areas of posterior space that are implausible. For instance, say we were to estimate the recovery rate, $\gamma$. $\gamma = \frac{1}{D}$, where $D$ is the duration of infection. We know that this must be a positive number, so we can reflect that in our prior. Moreover, even if we did not know very much about the clinical progression of COVID-19, we know that is an acute infection, not a chronic infection - i.e., people generally recovery within days - weeks. So we would want to explore recovery rates that reflect thus. Allowing the sampler to explore the posterior distribution where $\frac{1}{\gamma}$ is hundreds or even thousands of days is inefficient.
+Generally, we want prior distributions to be vague enough to explore all reasonable parameter values whilst preventing the sampler exploring areas of the parameter space that are implausible. For instance, say we were to estimate the recovery rate, $\gamma$. $\gamma = \frac{1}{D}$, where $D$ is the average duration of the infection. We know that this must be a positive number, so we can reflect this in our prior distribution. Moreover, even if we did not know very much about the clinical progression of COVID-19, we know that is an acute infection, not a chronic infection - i.e., people generally recovery within days - weeks. So we would want to explore recovery rates that reflect this. Allowing the sampler to explore the posterior distribution where $\frac{1}{\gamma}$ is hundreds or even thousands of days would be inefficient.
 
-We also need to think about the model likelihood, our data generating process. Essentially, we need to link our model output to the observed data we are fitting to. The distribution we choose to link our model out will depend on the type of data we have, and there often isn't only one choice. 
+We also need to think about the model likelihood, which aims to capture the data generating process. Essentially, we need to link the chosen model output to the data we are fitting the model to. The distribution we choose to link our model output dependa on the type of data we have, and there often isn't only one choice. 
 
-In infectious disease modelling we often have incidence data (i.e., count data) which we fit using a [Poisson likelihood](https://www.youtube.com/watch?v=H20k1O1zvik&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=27). The Poisson distribution has one parameter, $\lambda$ which is the mean rate of events (i.e. infections) occurring in a fixed time or place. $\lambda$ is both the mean and variance of the Poisson distribution. 
-
+In infectious disease modelling we often have incidence data, which we may want to fit using a [Poisson likelihood](https://www.youtube.com/watch?v=H20k1O1zvik&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=27). The Poisson distribution has one parameter, $\lambda$ which represents the mean rate of the event (in this case, infections) occurring in a fixed time and the variance. 
 
 
 **Q1: If we were to use the Poisson distribution to fit to incidence data, what model output would we fit to?**
 
-**A1: The rate that individuals are infectious, i.e., the rate that they enter the $I$ compartment, $= \beta \frac{I}{N} S$.** 
+**A1: The rate that individuals become infectious, i.e., the rate that they enter the $I$ compartment, $= \beta \frac{I}{N} S$.** 
 
 
-Alternatively, if we think the data is over-dispersed, that is if we think that the number of secondary infections may vary a lot between individuals or settings then we might want to use a Negative Binomial likelihood. The Negative Binomial distribution extends the Poisson distribution with an additional parameter $\kappa$ which controls the over-dispersion of the distribution. Critically, the variance is now $> \lambda$, whereas the Poisson distribution assumes that the variance $= \lambda$. When $\kappa$ is very small, over-dispersion is high, but when $\kappa$ is large enough, the Negative Binomial distribution converges on the Poisson! 
+Alternatively, if the data are over-dispersed, that is if the variance is larger than the mean then we might want to use a Negative Binomial likelihood. The Negative Binomial distribution extends the Poisson distribution with an additional parameter $\kappa$ which controls the over-dispersion of the distribution. Critically, the variance is now $> \lambda$. When $\kappa$ is very small, over-dispersion is high, but when $\kappa$ is large enough, the Negative Binomial distribution converges on the Poisson! 
 
 
-The final step in building our model is to think about the assumptions we have made along the way. As we said before, no model is perfect. We want our model to be as simple as possible, whilst still capturing the important features of the pathogen. This means we have to make simplifying assumptions in how we represent the transmission process in our compartments. One notable assumption is that everyone in the compartments in homogeneous. Equally, there might be lots of unknowns about the disease or the data, which again means we will have to make assumptions! We can also do sensitivity analyses to explore the impact of our assumptions. 
+The final step in building our model is to think about the assumptions we have made along the way. As we said before, no model is perfect. We want our model to be as simple as possible, whilst still capturing the important features of the pathogen. This means we have to make simplifying assumptions in how we represent the transmission process in our compartments. One notable assumption is that everyone in each compartment is assumed to be homogeneous. Equally, there might be lots of unknowns about the disease or the data, which again means we will have to make assumptions! We can also do sensitivity analyses to explore the impact of our assumptions. 
 
 ![Designing a compartmental model.](images/Generic modelling storyboard.png)
 
