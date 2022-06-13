@@ -26,12 +26,11 @@ Beneficial:
 Upon completion of this tutorial, students will be able to:
 
 1.	design an infectious disease compartmental model to answer public health questions. 
-2.	describe the utility of using simulated data when model fitting. 
-3.  compare methods of solving ODE using Stan. 
-4.	write a Stan model to fit an infectious disease model.
-5.  interpret Stan model diagnostics and implement appropriate solutions. 
-6.  structure R code into files based on functionality. 
-7.  write tests in R to check code. 
+2.  compare methods of solving ODE using Stan. 
+3.	write a Stan model to fit an infectious disease model.
+4.  interpret Stan model diagnostics and implement appropriate solutions. 
+5.  structure R code into files based on functionality. 
+6.  write tests in R to check code. 
 
 ### Project structure 
 
