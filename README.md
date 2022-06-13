@@ -18,19 +18,19 @@ Beneficial:
 ### Useful external resources:
 
 - [Bayesian workflow for disease transmission modeling in Stan](https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html#2_using_simulated_data_to_understand_our_model)
-- [A students guide to Bayesian statistics is accomponied by a lecture course on youtube](https://www.youtube.com/playlist?list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG)
+- [A students guide to Bayesian statistics is accompanied by a lecture course on youtube](https://www.youtube.com/playlist?list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG)
 
 
-### Intended learning outcomes
+### Intended learning outcomes 
 
 Upon completion of this tutorial, students will be able to:
 
 1.	design an infectious disease compartmental model to answer public health questions. 
-2.	describe the utility of using simulated data when model fitting. 
-3.  describe the different methods of solving ODE models using Stan and identify their strengths and limitations. 
-3.	code a Stan model to fit an infectious disease model to observed data and estimate parameters.
-5.  interpret Stan model diagnostics and decide on appropriate solutions. 
-4.	clean and format data using Tidyverse and produce high level plots using ggplot, in R. 
+2.  compare methods of solving ODE using Stan. 
+3.	write a Stan model to fit an infectious disease model.
+4.  interpret Stan model diagnostics and implement appropriate solutions. 
+5.  structure R code into files based on functionality. 
+6.  write tests in R to check code. 
 
 ### Project structure 
 
