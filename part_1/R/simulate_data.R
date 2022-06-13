@@ -29,7 +29,7 @@ simulate_data = function(
   
   # required package 
   library(deSolve)
-  library(cowplot)
+
 
   # source model 
   source("models/model1_deSolve.R")

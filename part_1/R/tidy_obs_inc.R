@@ -22,7 +22,9 @@ tidy_obs_inc = function(
   var = "GP"
 ){
   
-  library(tidyverse)
+   # load package
+  
+  library(dplyr)
   
    var = sym(var)
   

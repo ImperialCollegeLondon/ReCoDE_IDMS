@@ -23,6 +23,9 @@ compare_param_est = function(
 ){
   
   
+  # required package 
+  library(ggplot2)
+  library(dplyr)
   
   true_param = data.frame(names = parameter_names,
                           mean = true_param_values)

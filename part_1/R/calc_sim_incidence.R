@@ -25,7 +25,8 @@ calc_sim_incidence = function(
 ){
   
   # required package 
-  library(tidyverse)
+  library(ggplot2)
+  library(dplyr)
 
   data = data.frame(date = all_dates,
                         rep_inc = round(rho *ODE_data$E * sigma))

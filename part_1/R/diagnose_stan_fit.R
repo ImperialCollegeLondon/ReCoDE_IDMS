@@ -17,7 +17,6 @@ pars){
 
   # required package 
   library(bayesplot)
-  library(cowplot)
 
 
   stan_fit_post= as.array(stan_fit)

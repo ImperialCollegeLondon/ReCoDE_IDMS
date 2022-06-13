@@ -22,8 +22,10 @@ plot_model_fit = function(
  date_seed
 ){
   
+  
   # required package 
-  library(tidyverse)
+  library(ggplot2)
+  library(dplyr)
   
   # extract posterior estimates from stan fit 
   stan_fit_ext = rstan::extract(stan_fit) 
@@ -33,7 +35,7 @@ plot_model_fit = function(
   # group by data and calculate the mean and 95% CrI 
   stan_fit_df_sum = stan_fit_df %>% 
     rename(ni = iterations, time = Var2, value = Freq) %>%
-    dplyr::mutate(
+    mutate(
       ni = as.numeric(ni),
       time = as.numeric(time)) %>% 
     group_by(time) %>% 
@@ -46,8 +48,7 @@ plot_model_fit = function(
   # here we make a variable from the rownames of our data, 
   # which account for the discarded unobserved data if using simulated data 
 
-  data$time = (1:dim(data)[1] ) +  which(all_dates == seed_omicron)
-  
+  data$time = (1:dim(data)[1] ) +  date_seed
   ## create a name from the character string describing the variable to plot 
   variable_data = sym(variable_data)
 
