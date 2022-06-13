@@ -263,7 +263,7 @@ This means we need to additionally estimate $\kappa$. We will assume  for which 
 
 Some of the assumptions include:
 
-* All reported incidence is the Omicron variant
+* All reported incidence cases are due to the Omicron variant
 * No waning immunity
 * No vaccination
 * No pre-symptomatic transmission
@@ -321,7 +321,7 @@ $$I_{t1} = 1.99 + 1 * 99 * \frac{1.99}{100} = 3.94$$
 And so on... 
 
 
-To solve our ODEs in Stan using this method, we can simply use a for loop to solve the equations at each time step and predict the state at the next time step.This method is simple, but its accuracy depends on the time step used. Smaller time steps will get closer to the exact solution. For instance, when fitting a model over the course of a year, day intervals may be sufficient. If fitting a model over days, then hours would be a more appropriate interval. A benefit of using simulated data, as we will see, is that we can check that our time step is sufficiently small to obtain an accurate approximation of the solution. Depending on the required level of accuracy, the time step needed to obtain an acceptable approximation may be so small as to be computationally expensive. In this instance, higher order methods are used such as the  [Runge-Kutta Method](#RKM). 
+To solve our ODEs in Stan using this method, we can simply use a for loop to solve the equations at each time step and predict the state at the next time step.This method is simple, but its accuracy depends on the time step used. Smaller time steps will get closer to the exact solution. For instance, when fitting a model over the course of a year, day intervals may be sufficient. If fitting a model over days, then hours would be a more appropriate interval. A benefit of using simulated data, as we will see, is that we can check that our time step is sufficiently small to obtain an accurate approximation of the solution. Depending on the required level of accuracy, the time step needed to obtain an acceptable approximation may be so small as to be computationally expensive. In this instance, higher order methods are used such as the [Runge-Kutta Method](#RKM). 
 
 
 
@@ -331,13 +331,13 @@ You will find a data block, a parameters block, a transformed parameters block a
 
 ##### Data block
 
-The data block includes the number of data points we have, as well as the number of time steps to run the model over. These two values aren't the same as we don't expect to have observed the transmission of Omega from the very first day of its emergence. To account for this, we seed our model ($I_{t0}$) a month before we observe data. The time point that we seed Omicron is also provided in the data block. 
+The data block includes the number of data points we have, as well as the number of time steps to run the model over. These two values aren't the same as we don't expect to have observed the transmission of Omicron from the very first day of its emergence. To account for this, we seed our model ($I_{t0}$) a month before we observe data. The time point that we seed Omicron is also provided in the data block. 
 
 The data block also contains the parameters and initial conditions we aren't estimating, and of course, our observed data. 
 
 ##### Parameters block
 
-This contains the parameters we want to estimate. Note the bounds we put on parameters, which must all be positive and for rho must be between 0 and 1. 
+This contains the parameters we want to estimate. Note the bounds we put on parameters, which must all be positive and for $\rho$ must be between 0 and 1. 
 
 ##### Transformed parameters block
 
@@ -349,7 +349,7 @@ This contains the model likelihood and priors.
 
 ##### Generated quantities block
 
-This contains code to calculate any other quantities of interesr, that are not needed for the model block. In this instance, we will calculate $R_0$.
+This contains code to calculate any other quantities of interest, that are not needed for the model block. In this instance, we will calculate $R_0$.
 
 
 **Take some time to read over the model and check it makes sense.**
@@ -358,18 +358,18 @@ This contains code to calculate any other quantities of interesr, that are not n
 
 ### <a id="RKM"></a> Method 2: Runge-Kutta Method
 
-This second method builds on Eulers method, but rather than calculating a single rate of change at each time step, we calculate 4 different slopes. These slopes are then used as a weighted average to approximate the actual rate of change of states. Because we calculate multiple slops at each interval, we obtain a more accurate approximation. For a more detailed visualisation of this method, see [here](https://www.haroldserrano.com/blog/visualizing-the-runge-kutta-method#:~:text=The%20Runge%2DKutta%20Method%20is,uses%20them%20as%20weighted%20averages).  
+This second method builds on Euler's method, but rather than calculating a single rate of change at each time step, we calculate 4 different slopes. These slopes are then used as a weighted average to approximate the actual rate of change of states. Because we calculate multiple slopes at each interval, we obtain a more accurate approximation. For a more detailed visualisation of this method, see [here](https://www.haroldserrano.com/blog/visualizing-the-runge-kutta-method#:~:text=The%20Runge%2DKutta%20Method%20is,uses%20them%20as%20weighted%20averages).  
 
 To implement this method, we use one of Stan's two inbuilt ODE integrators, *integrate_ode_rk45*, which is the faster (but potentially less robust) of the two. Note, Stan issues warning messages if an integrator fails to solve an ODE (although we have never had this issue), at which point the solver may need to be [adjusted](https://mc-stan.org/docs/2_24/stan-users-guide/control-parameters-for-ode-solving.html) or [swapped](https://mc-stan.org/docs/2_24/stan-users-guide/stiff-ode-section.html). We specify the ODE in Stan using a function within, unsurprisingly, the functions block. See the section of [this tutorial](https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html#coding_the_ode_in_stan) on coding the ODE in Stan for more details. 
 
 **To see how we code up the SEIQR model in Stan using *integrate_ode_rk45* open up *model1_RK_V1.stan*, in the *models* folder, or run *m1_RK* (the name of the compiled Stan model).**
 
-As before, you will find a data block, a parameters block, a transformed parameters block a model block, a generated quantities block, plus a functions block.
+As before, you will find a data block, a parameters block, a transformed parameters block, a model block, a generated quantities block, plus a functions block.
 
 
 # Fitting to simulated data 
 
-Before we fit our model to real data, we will use simulated data to check the model. This is useful to check we have no bugs in our code. Also, even though Stan has lots of helpful diagnostics, we can never be completely certain our sampling algorithm has converged on the true posterior distribution. The diagnostics only confirm when it definitely hasn't. Therefore, using simulated data lets us check that the model can recover known posterior estimates, which gives us more confidence when it comes to fitting data. 
+Before we fit our model to real data, we will use simulated data to check the code's ability to reconstruct the parameter estimates used to simulate the data. This is a useful step to check we have no bugs in our code. Also, even though Stan has lots of helpful diagnostics, we can never be completely certain our sampling algorithm has converged on the true posterior distribution. The diagnostics only confirm when it definitely hasn't converged. Therefore, using simulated data, let us check that the model can recover known posterior estimates, which gives us more confidence when it comes to fitting real-world data. 
 
 ### Defining global parameters 
 
