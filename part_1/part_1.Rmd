@@ -156,17 +156,17 @@ As we are fitting to the 4th wave of SARS-CoV-2 in Gauteng, we know some of the 
 
 $$R_{t0} = 15,810,388  *  0.562 = 8,885,438$$
 
-We don't know how many initial infections where were or exactly what time period Omicron emerged, so we will estimate $I_{t0}$. 
+We don't know how many initial infections there were or exactly when Omicron emerged, so we will estimate $I_{t0}$. 
 
 Finally, $$S_{t0} = N - R_{t0} - I_{t0}$$ 
 
 
-### Step 6: What are the rate parameters which describe movement between the compartments?
+### Step 6: What are the rate parameters which describe flows between the compartments?
 
 
 ![](images/SEIQR comp model.png)
 
-Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is a probability. All individuals will progress to be infectious at an average rate of $\sigma$ and some $\rho$ % will be tested and reported.
+Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is a probability. All individuals will progress to be infectious at an average rate of $\sigma$ and a proportion $\rho$ will be tested, reported and quarantined.
 
 
 
@@ -182,7 +182,7 @@ The incubation and infectious period are well defined for previous SARS-CoV-2 va
 
 ### Step 9: Which parameters do we need to estimate?
 
-By process of elimination, we are going to estimate $\beta$ and $\rho$. 
+Having fixed the generation time (i.e., $\sigma$ and $\gamma$), we are going to estimate $\beta$ and $\rho$. 
 
 
 **Q3: why would we want to estimate these parameters?**
@@ -190,7 +190,7 @@ By process of elimination, we are going to estimate $\beta$ and $\rho$.
 
 ### Step 10: Do we have any domain knowledge to inform the parameter priors?
 
-First, $\rho$, the probability of reporting. $\rho$ must be between 0 and 1, so a [beta](https://en.wikipedia.org/wiki/Beta_distribution) prior is suitable here. For  now, lets assume that any probability of reporting is equally likely and say that $\rho \sim Beta(1,1)$. 
+First, $\rho$, the probability of reporting. $\rho$ must be between 0 and 1, so a [beta](https://en.wikipedia.org/wiki/Beta_distribution) prior is suitable here. For now, let's assume that any probability of reporting is equally likely and say that $\rho \sim Beta(1,1)$. 
 
 
 **Q4: use the function `rbeta()` to check that $\rho \sim Beta(1,1)$ provides a uniform distribution between 0 and 1.**
@@ -203,14 +203,14 @@ plot(density(samp))
 ```
  
 
-For $\beta$ we are not sure how transmissible Omicron is yet, but we think somewhere similar or more transmissible than the Delta variant. A useful measure of transmission is the [Reproduction number](https://en.wikipedia.org/wiki/Basic_reproduction_number) ($R_0$), the average number of secondary cases produced per infectious individual in an susceptible population. The $R_0$ is equal to the rate that individuals are infectious / the rate they recover. For a simple SIR model this would be:
+For $\beta$ we are not sure how transmissible Omicron is yet, but we think somewhere similar or more transmissible than the Delta variant. A useful measure of transmission is the [Reproduction number](https://en.wikipedia.org/wiki/Basic_reproduction_number) ($R_0$), the average number of secondary cases produced per infectious individual in an susceptible population. The $R_0$ for a simple SIR model is equal to the transmission rate multiplied by the average duration of the infectious period. For a simple SIR model this would be:
 
-$$R_0 = \frac{\beta}{\gamma}$$ 
+$$R_0 = \beta \times \frac{1}{\gamma} = \frac{\beta}{\gamma} $$ 
 
 For our model: 
 
 $$R_0 = \frac{(1-\rho)\beta}{\gamma}$$
-This can be confirmed using the [next generation matrices method](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2871801/#:~:text=The%20basic%20reproduction%20number%20%E2%84%9B,categories%20of%20individuals%20are%20recognized), if interested. The $R_0$ of Delta is estimated around 5 [4], so exploring values of $\beta$ that correspond to an $R_0$ of 5 and higher seems reasonable.
+Intuitively, this is due to the fact that only a proportion $(1-\rho)$ of subjects contribute to onwards transmission. More formally, this can also be demonstrated using the [next generation matrices method](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2871801/#:~:text=The%20basic%20reproduction%20number%20%E2%84%9B,categories%20of%20individuals%20are%20recognized), if interested. The $R_0$ of Delta is estimated around 5 [4], so exploring values of $\beta$ that correspond to an $R_0$ of 5 and higher seems reasonable.
 
 
 **Q5: Define a prior for $\beta$ which supports $R_0$ values between 1 and at least ~12, given $\rho$ values between 0 and 1.**
@@ -246,13 +246,13 @@ plot(density(R0_p))
 **We can see that $\beta \sim Lognormal(0.8,0.5)$ supports $R_0$ values mostly between 1 and 13, but allow for extreme values of $R_0$ if the data supports it.** 
 
 
-Finally, we will assume that Omicron was seeded by very few individuals given Gauteng: $I_0 \sim Normal(1,5)$. Note, that although this allows for negative values, we can set parameter bounds in Stan which will ensure the seed is positive. 
+Finally, we will assume that Omicron was seeded by very few infected individuals in Gauteng: $I_0 \sim Normal(1,5)$. Note, that although this allows for negative values, we can set parameter bounds in Stan which will ensure the number of initial infections is positive. 
 
 ### Step 11: What is the model likelihood?
 
-SARS-CoV-2 is known to be overdispersed, so we will use a Negative-Binomial likelihood. We will match the reported incidence data to the reported incidence in our model, which is the rate of entry into the $Q$ compartment.Thus, let  $\lambda = \rho \sigma E$. Our likelihood is therefore:
+SARS-CoV-2 is known to be overdispersed, so we will use a Negative-Binomial likelihood. We will match the reported incidence data to the reported incidence in our model, which is the rate of entry into the $Q$ compartment. Thus, let  $\mu = \rho \sigma E$. Our likelihood is therefore:
 
-$$ y \sim NegBin(\lambda, \kappa) $$
+$$ y \sim NegBin(\mu, \kappa) $$
 
 
 This means we need to additionally estimate $\kappa$. We will assume  for which we will assume the prior $\kappa \sim exp(0.01)$ which allows for a wide range of values reflecting our uncertainty. 
