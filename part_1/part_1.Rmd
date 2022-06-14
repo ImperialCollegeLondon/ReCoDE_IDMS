@@ -11,23 +11,22 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction 
 
-Hi and welcome to the first SARS-CoV-2 model in this exampler. The overall aim of this script is to fit a Susceptible (S) - Exposed (E) - Infectious (I) - Quarantine (Q) - Recovered (R) model to real incidence and genomic data collected in Gauteng, South Africa between late 2021 and early 2022. 
+Hi and welcome to the first SARS-CoV-2 model in this exemplar. The overall aim of this script is to fit a Susceptible (S) - Exposed (E) - Infectious (I) - Quarantine (Q) - Recovered (R) model to incidence data collected in Gauteng, South Africa between late 2021 and early 2022. 
 
 
-Hopefully, this project will show how we design an infectious disease compartmental model to answer a public health questions. There are many choices to be made along the way so it is important to think about the assumptions we are making so our model is robust. 
+This tutorial will show how we design an infectious disease compartmental model. There are many choices to be made along the way so it is important to think about the assumptions we are making so our model is robust. 
 
 ##### Some questions include:
 
 - what are the most important disease and epidemiological features?
 - how do we represent these features in a model?
-- what data do I need?
 - what parameters should I estimate? 
 
-As well as designing a model, we will also simulate fake data to check our model works, explore different methods of solving ordinary differential equations (ODEs) in Stan, check our Stan model is fitting well and produce some nice epi curves! 
+We will first use simulated data to check our model works (i.e. can reproduce the parameter estimates used to generate the data). In this tutorial we will explore different methods of solving ordinary differential equations (ODEs) in Stan, showcase how to run performance checks and produce some nice epicurves and visualizations! 
 
-This code also aims to be reusable, sustainable and testable - important features often overlooked in R! 
+This code also aims to be reusable, sustainable and testable - this latter is an important features often overlooked in R! 
 
-First, we need to load some packages. We also need to source the functions needed to run this script, found in the *R* folder and read in the raw incidence data. Finally, we need to compile the Stan models, found in the *models* folder. 
+First, we need to load some packages. We also need to source the functions needed to run this script - these are found in the *R* folder - and read in the raw incidence data. Finally, we need to compile the Stan models, which is found in the *models* folder. 
 
 ```{r message=FALSE, warning=FALSE}
 
@@ -47,7 +46,6 @@ source("R/tidy_obs_inc.R")
 
 
 # Data 
-
 raw_data = read.csv("reported_incidence_data_Gauteng.csv")
 
 # Models
@@ -68,56 +66,55 @@ First, lets take a look at the storyboard below. It outlines some of the key ste
 
 
 
-Briefly, we need to define our research question (1), population and time period (2). Then we need to think about what data we will fit our model to (3). Incidence data? Prevalence data?
+Briefly, we need to define (1) our research question, (2) population and time period. Then we need to think about (3) how our model can reproduce the observed data. Are we modelling incidence or prevalence data?
 
-Next, building the compartmental model (4). Compartmental models are the bread and butter of infectious disease modelling. They are a simple system of differential equations which describe the movement of individuals from one state to another. In the figure we show an SIR model, the most simple model typically used. Individuals in a population start out susceptible to a disease, they have no prior exposure to the disease and so no protective immunity. This is the S compartment. From there, individuals may be exposed and infected by the pathogen, at which point they enter the I compartment. Finally, they recover from the disease and are no longer infectious, they enter the R compartment. 
+Next, we need to (4) design the compartmental model. Compartmental models are the bread and butter of infectious disease modelling. They are a system of differential equations which describe the flows of individuals from one infectious state to another and represent the infection history. In the figure we show an SIR model, the most simple model typically used. In this model we often assume that individuals in a population start out susceptible to a disease, i.e.,  they have no prior protective immunity. This is the S compartment. From there, individuals may be infected by the pathogen, at which point they are also infectious and enter the I compartment. Finally, when they recover from the disease and are no longer infectious, they enter the R compartment. 
 
 I will assume you are familiar with compartmental models and so won't go into further detail here. If you are not so familiar, there are lots of good resources out there which already explain SIR models. 
 
 For instance, Imperial has a module on SIR modules on [Coursera](https://www.coursera.org/lecture/developing-the-sir-model/introduction-to-the-sir-model-FXISd?redirectTo=%2Flearn%2Fdeveloping-the-sir-model%3Faction%3Denroll). Or there are an abundance of videos on YouTube where people introduce SIR models, especially since COVID-19. [This](https://www.youtube.com/watch?v=Qrp40ck3WpI) is a nice intro! 
 
-Having designed the model, we need to think about the initial conditions for each state (5). If an infectious agent is entirely new to a population, like SARS-CoV-2 was at the start of 2020, we would expect all of the population to be in the S compartment, with a few individuals in the infectious compartment: 
+Having designed the model, we need to (5) think about the initial conditions for each state. If an infectious agent is entirely new to a population, like SARS-CoV-2 was at the start of 2020, we would expect all of the population to be in the S compartment, with a few individuals in the infectious compartment: 
 $$S = N - I_0$$ 
 
-If the in pathogen is not novel, then we might expect some of the population to be in the recovered compartment. Critically, the sum of all the compartments must equal the population, $$S + I + R = N$$ 
+If the in pathogen is not novel and there is prior immunity, then we might expect some of the population to be in the recovered compartment. Critically, the sum of all the compartments must equal the population size, $$S + I + R = N$$ 
 
-The flow between the compartments is governed by rates (6). In this example, we have the transmission rate, typically denoted $\beta$ and the recovery rate, $\gamma$. Note that because transmission depends on the number of infectious people we need to account for this. Hence, the force of infection (the per capita rate that susceptible indviduals contract the infection) depends on the prevalance of infectious people  and the transmission rate:
+The flow between the compartments is governed by rates (6). In this example, we have the transmission rate, typically denoted $\beta$ and the recovery rate, $\gamma$. Note that because transmission depends on the number of infectious people we need to account for this. Hence, the force of infection (the per capita rate that susceptible individuals contract the infection) depends on he transmission rate and on the number of infectious people:
 
-$$\lambda = \frac{I}{N} \beta$$
+$$\lambda = \beta\frac{I}{N} $$
 
-Next, converting our model diagram into ODE equations (7). Simply, arrows leading out of a compartment are subtraction and arrows leading into a compartment are addition. 
+Next, we need to (7) convert our flow diagram into ODE equations. Simply, arrows leading out of a compartment represent subtractions and arrows leading into a compartment represent additions. 
 
-After that, we need to decide which parameters we want to fix (8) and which we want to estimate (9). This likely depends on the research question and available literature.
+After that, we need to decide (8) which parameters we want to fix and (9) which we want to estimate. This likely depends on the research question and available data and parameter estimates in the literature.
 
-As we conducting Bayesian modelling, the next decisions we need to make are about the priors (10) and likelihood (11). Hopefully you are familiar with Bayesian statistics, but if not then I recommend going back to some of the resources suggested at the top, namely A students guide to Bayesian Statistics! 
+As we are fitting the model using Bayesian inference, the next decisions we need to make are about the priors (10) and likelihood (11). Hopefully you are familiar with Bayesian statistics, but if not then I recommend going back to some of the resources suggested at the top, namely 'A students guide to Bayesian Statistics'! 
 
 Briefly, what we are asking is, given the data $y$, what are the most likely parameters $\theta$. *Note, when we talk of parameters here, this refers to those we are estimating, not the fixed parameters*. 
 
-In other words, our posterior is $Pr(\theta|y)$. Bayes rule tells us that:
+In other words, our posterior distribution is $Pr(\theta|y)$. Bayes rule tells us that:
 
 $$
 Pr(\theta | y) \propto Pr(y | \theta) Pr(\theta)
 $$
 
-Where, $Pr(y | \theta)$ is the likelihood, or sampling distribution, and $Pr(\theta)$ are our priors. The likelihood tells us how to generate our data $y$, given our model parameters. Our priors allow us to incorporate existing domain knowledge into the model. 
+Where, $Pr(y | \theta)$ is the likelihood, or sampling distribution, and $Pr(\theta)$ is our prior distribution. The likelihood tells us how to generate our data $y$, given our model parameters. Our prior distributions allow us to incorporate existing domain knowledge into the model. 
 
-Generally, we want priors to be vague enough to explore all reasonable parameter values whilst preventing the sampler exploring areas of posterior space that are implausible. For instance, say we were to estimate the recovery rate, $\gamma$. $\gamma = \frac{1}{D}$, where $D$ is the duration of infection. We know that this must be a positive number, so we can reflect that in our prior. Moreover, even if we did not know very much about the clinical progression of COVID-19, we know that is an acute infection, not a chronic infection - i.e., people generally recovery within days - weeks. So we would want to explore recovery rates that reflect thus. Allowing the sampler to explore the posterior distribution where $\frac{1}{\gamma}$ is hundreds or even thousands of days is inefficient.
+Generally, we want prior distributions to be vague enough to explore all reasonable parameter values whilst preventing the sampler exploring areas of the parameter space that are implausible. For instance, say we were to estimate the recovery rate, $\gamma$. $\gamma = \frac{1}{D}$, where $D$ is the average duration of the infection. We know that this must be a positive number, so we can reflect this in our prior distribution. Moreover, even if we did not know very much about the clinical progression of COVID-19, we know that is an acute infection, not a chronic infection - i.e., people generally recovery within days - weeks. So we would want to explore recovery rates that reflect this. Allowing the sampler to explore the posterior distribution where $\frac{1}{\gamma}$ is hundreds or even thousands of days would be inefficient.
 
-We also need to think about the model likelihood, our data generating process. Essentially, we need to link our model output to the observed data we are fitting to. The distribution we choose to link our model out will depend on the type of data we have, and there often isn't only one choice. 
+We also need to think about the model likelihood, which aims to capture the data generating process. Essentially, we need to link the chosen model output to the data we are fitting the model to. The distribution we choose to link our model output dependa on the type of data we have, and there often isn't only one choice. 
 
-In infectious disease modelling we often have incidence data (i.e., count data) which we fit using a [Poisson likelihood](https://www.youtube.com/watch?v=H20k1O1zvik&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=27). The Poisson distribution has one parameter, $\lambda$ which is the mean rate of events (i.e. infections) occurring in a fixed time or place. $\lambda$ is both the mean and variance of the Poisson distribution. 
-
+In infectious disease modelling we often have incidence data, which we may want to fit using a [Poisson likelihood](https://www.youtube.com/watch?v=H20k1O1zvik&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=27). The Poisson distribution has one parameter, $\lambda$ which represents the mean rate of the event (in this case, infections) occurring in a fixed time and the variance. 
 
 
 **Q1: If we were to use the Poisson distribution to fit to incidence data, what model output would we fit to?**
 
-**A1: The rate that individuals are infectious, i.e., the rate that they enter the $I$ compartment, $= \beta \frac{I}{N} S$.** 
+**A1: The rate that individuals become infectious, i.e., the rate that they enter the $I$ compartment, $= \beta \frac{I}{N} S$.** 
 
 
-Alternatively, if we think the data is over-dispersed, that is if we think that the number of secondary infections may vary a lot between individuals or settings then we might want to use a Negative Binomial likelihood. The Negative Binomial distribution extends the Poisson distribution with an additional parameter $\kappa$ which controls the over-dispersion of the distribution. Critically, the variance is now $> \lambda$, whereas the Poisson distribution assumes that the variance $= \lambda$. When $\kappa$ is very small, over-dispersion is high, but when $\kappa$ is large enough, the Negative Binomial distribution converges on the Poisson! 
+Alternatively, if the data are over-dispersed, that is if the variance is larger than the mean then we might want to use a Negative Binomial likelihood. The Negative Binomial distribution extends the Poisson distribution with an additional parameter $\kappa$ which controls the over-dispersion of the distribution. Critically, the variance is now $> \lambda$. When $\kappa$ is very small, over-dispersion is high, but when $\kappa$ is large enough, the Negative Binomial distribution converges on the Poisson! 
 
 
-The final step in building our model is to think about the assumptions we have made along the way. As we said before, no model is perfect. We want our model to be as simple as possible, whilst still capturing the important features of the pathogen. This means we have to make simplifying assumptions in how we represent the transmission process in our compartments. One notable assumption is that everyone in the compartments in homogeneous. Equally, there might be lots of unknowns about the disease or the data, which again means we will have to make assumptions! We can also do sensitivity analyses to explore the impact of our assumptions. 
+The final step in building our model is to think about the assumptions we have made along the way. As we said before, no model is perfect. We want our model to be as simple as possible, whilst still capturing the important features of the pathogen. This means we have to make simplifying assumptions in how we represent the transmission process in our compartments. One notable assumption is that everyone in each compartment is assumed to be homogeneous. Equally, there might be lots of unknowns about the disease or the data, which again means we will have to make assumptions! We can also do sensitivity analyses to explore the impact of our assumptions. 
 
 ![Designing a compartmental model.](images/Generic modelling storyboard.png)
 
@@ -125,17 +122,17 @@ An important thing to note is that although these may seem like a linear set of 
 
 So, now lets design the model! 
 
-#### Step 1: Define the reseach question
+### Step 1: Define the reseach question
 
-What are the the transmission dynamics of the Omicron variant of concern following its emergence?
+There may be multiple questions you want to answer in an analysis, and listing them helps you keep the focus. In this example, one of the key questions is: What is the reproduction number of the Omicron variant of concern?
 
 ### Step 2: What is the population and time period?
 
-This is partly answered by the research question, we are interested in the population of Gauteng and the period of time when Omicron first emerged.The population of Gauteng is 15,810,388.
+This is partly answered by the research question, we are interested in the population of Gauteng and the period of time when Omicron first emerged.The population of Gauteng is 15,810,388 people.
 
 We know that Omicron was first detected in October 2021, but we suspect that there was probably some transmission before it was detected, so the start of our modelling period will be September 2021. 
 
-We want to explore the dynamics during the 4th Omicron driven wave. If you look at [this](https://covid19.who.int/region/afro/country/za) dashboard provided by the WHO, we can see that the 4th wave was over by ~February. We will run our model till the 23rd of February to make sure we capture all of the epidemic curve. 
+We want to explore whether we can reconstruct the dynamics observed in the Omicron wave. If you look at [this](https://covid19.who.int/region/afro/country/za) dashboard provided by the WHO, we can see that this 4th wave was over by ~February. We will run our model till the 23rd of February to make sure we capture all of the epidemic curve. 
 
 
 ### Step 3: What data are we fitting the model to?
@@ -145,7 +142,7 @@ We are going to fit to the *reported* incidence of SARS-CoV-2 for Gauteng, South
 
 ### Step 4: What compartments do we minimally need to represent the disease transmission process? 
 
-Starting with the SIR model, we want to account for the [incubtion period](https://en.wikipedia.org/wiki/Incubation_period) of COVID-19 and we need to account for only having data on the reported incidence. Therefore, we want to extend the model in some way which allows for individuals to either be detected, reported and isolated or not detected, in which case they carry on as normal and are infectious. 
+Starting with the SIR model, we want to account for the [incubation period](https://en.wikipedia.org/wiki/Incubation_period) of COVID-19 and we need to account for only having data on the reported incidence. Therefore, we want to extend the simple SIR model in some way which allows for individuals to either be detected, reported and isolated or not detected, in which case they remain infectious and are not isolated for the whole duration of the infection. 
 
 
 **Q2: draw out a compartmental model which accounts for the above**
@@ -159,17 +156,17 @@ As we are fitting to the 4th wave of SARS-CoV-2 in Gauteng, we know some of the 
 
 $$R_{t0} = 15,810,388  *  0.562 = 8,885,438$$
 
-We don't know how many initial infections where were or exactly what time period Omicron emerged, so we will estimate $I_{t0}$. 
+We don't know how many initial infections there were or exactly when Omicron emerged, so we will estimate $I_{t0}$. 
 
 Finally, $$S_{t0} = N - R_{t0} - I_{t0}$$ 
 
 
-### Step 6: What are the rate parameters which describe movement between the compartments?
+### Step 6: What are the rate parameters which describe flows between the compartments?
 
 
 ![](images/SEIQR comp model.png)
 
-Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is a probability. All individuals will progress to be infectious at an average rate of $\sigma$ and some $\rho$ % will be tested and reported.
+Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is a probability. All individuals will progress to be infectious at an average rate of $\sigma$ and a proportion $\rho$ will be tested, reported and quarantined.
 
 
 
@@ -185,7 +182,7 @@ The incubation and infectious period are well defined for previous SARS-CoV-2 va
 
 ### Step 9: Which parameters do we need to estimate?
 
-By process of elimination, we are going to estimate $\beta$ and $\rho$. 
+Having fixed the generation time (i.e., $\sigma$ and $\gamma$), we are going to estimate $\beta$ and $\rho$. 
 
 
 **Q3: why would we want to estimate these parameters?**
@@ -193,7 +190,7 @@ By process of elimination, we are going to estimate $\beta$ and $\rho$.
 
 ### Step 10: Do we have any domain knowledge to inform the parameter priors?
 
-First, $\rho$, the probability of reporting. $\rho$ must be between 0 and 1, so a [beta](https://en.wikipedia.org/wiki/Beta_distribution) prior is suitable here. For  now, lets assume that any probability of reporting is equally likely and say that $\rho \sim Beta(1,1)$. 
+First, $\rho$, the probability of reporting. $\rho$ must be between 0 and 1, so a [beta](https://en.wikipedia.org/wiki/Beta_distribution) prior is suitable here. For now, let's assume that any probability of reporting is equally likely and say that $\rho \sim Beta(1,1)$. 
 
 
 **Q4: use the function `rbeta()` to check that $\rho \sim Beta(1,1)$ provides a uniform distribution between 0 and 1.**
@@ -206,14 +203,14 @@ plot(density(samp))
 ```
  
 
-For $\beta$ we are not sure how transmissible Omicron is yet, but we think somewhere similar or more transmissible than the Delta variant. A useful measure of transmission is the [Reproduction number](https://en.wikipedia.org/wiki/Basic_reproduction_number) ($R_0$), the average number of secondary cases produced per infectious individual in an susceptible population. The $R_0$ is equal to the rate that individuals are infectious / the rate they recover. For a simple SIR model this would be:
+For $\beta$ we are not sure how transmissible Omicron is yet, but we think somewhere similar or more transmissible than the Delta variant. A useful measure of transmission is the [Reproduction number](https://en.wikipedia.org/wiki/Basic_reproduction_number) ($R_0$), the average number of secondary cases produced per infectious individual in an susceptible population. The $R_0$ for a simple SIR model is equal to the transmission rate multiplied by the average duration of the infectious period. For a simple SIR model this would be:
 
-$$R_0 = \frac{\beta}{\gamma}$$ 
+$$R_0 = \beta \times \frac{1}{\gamma} = \frac{\beta}{\gamma} $$ 
 
 For our model: 
 
 $$R_0 = \frac{(1-\rho)\beta}{\gamma}$$
-This can be confirmed using the [next generation matrices method](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2871801/#:~:text=The%20basic%20reproduction%20number%20%E2%84%9B,categories%20of%20individuals%20are%20recognized), if interested. The $R_0$ of Delta is estimated around 5 [4], so exploring values of $\beta$ that correspond to an $R_0$ of 5 and higher seems reasonable.
+Intuitively, this is due to the fact that only a proportion $(1-\rho)$ of subjects contribute to onwards transmission. More formally, this can also be demonstrated using the [next generation matrices method](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2871801/#:~:text=The%20basic%20reproduction%20number%20%E2%84%9B,categories%20of%20individuals%20are%20recognized), if interested. The $R_0$ of Delta is estimated around 5 [4], so exploring values of $\beta$ that correspond to an $R_0$ of 5 and higher seems reasonable.
 
 
 **Q5: Define a prior for $\beta$ which supports $R_0$ values between 1 and at least ~12, given $\rho$ values between 0 and 1.**
@@ -249,13 +246,13 @@ plot(density(R0_p))
 **We can see that $\beta \sim Lognormal(0.8,0.5)$ supports $R_0$ values mostly between 1 and 13, but allow for extreme values of $R_0$ if the data supports it.** 
 
 
-Finally, we will assume that Omicron was seeded by very few individuals given Gauteng: $I_0 \sim Normal(1,5)$. Note, that although this allows for negative values, we can set parameter bounds in Stan which will ensure the seed is positive. 
+Finally, we will assume that Omicron was seeded by very few infected individuals in Gauteng: $I_0 \sim Normal(1,5)$. Note, that although this allows for negative values, we can set parameter bounds in Stan which will ensure the number of initial infections is positive. 
 
 ### Step 11: What is the model likelihood?
 
-SARS-CoV-2 is known to be overdispersed, so we will use a Negative-Binomial likelihood. We will match the reported incidence data to the reported incidence in our model, which is the rate of entry into the $Q$ compartment.Thus, let  $\lambda = \rho \sigma E$. Our likelihood is therefore:
+SARS-CoV-2 is known to be overdispersed, so we will use a Negative-Binomial likelihood. We will match the reported incidence data to the reported incidence in our model, which is the rate of entry into the $Q$ compartment. Thus, let  $\mu = \rho \sigma E$. Our likelihood is therefore:
 
-$$ y \sim NegBin(\lambda, \kappa) $$
+$$ y \sim NegBin(\mu, \kappa) $$
 
 
 This means we need to additionally estimate $\kappa$. We will assume  for which we will assume the prior $\kappa \sim exp(0.01)$ which allows for a wide range of values reflecting our uncertainty. 
@@ -266,7 +263,7 @@ This means we need to additionally estimate $\kappa$. We will assume  for which 
 
 Some of the assumptions include:
 
-* All reported incidence is the Omicron variant
+* All reported incidence cases are due to the Omicron variant
 * No waning immunity
 * No vaccination
 * No pre-symptomatic transmission
@@ -324,7 +321,7 @@ $$I_{t1} = 1.99 + 1 * 99 * \frac{1.99}{100} = 3.94$$
 And so on... 
 
 
-To solve our ODEs in Stan using this method, we can simply use a for loop to solve the equations at each time step and predict the state at the next time step.This method is simple, but its accuracy depends on the time step used. Smaller time steps will get closer to the exact solution. For instance, when fitting a model over the course of a year, day intervals may be sufficient. If fitting a model over days, then hours would be a more appropriate interval. A benefit of using simulated data, as we will see, is that we can check that our time step is sufficiently small to obtain an accurate approximation of the solution. Depending on the required level of accuracy, the time step needed to obtain an acceptable approximation may be so small as to be computationally expensive. In this instance, higher order methods are used such as the  [Runge-Kutta Method](#RKM). 
+To solve our ODEs in Stan using this method, we can simply use a for loop to solve the equations at each time step and predict the state at the next time step.This method is simple, but its accuracy depends on the time step used. Smaller time steps will get closer to the exact solution. For instance, when fitting a model over the course of a year, day intervals may be sufficient. If fitting a model over days, then hours would be a more appropriate interval. A benefit of using simulated data, as we will see, is that we can check that our time step is sufficiently small to obtain an accurate approximation of the solution. Depending on the required level of accuracy, the time step needed to obtain an acceptable approximation may be so small as to be computationally expensive. In this instance, higher order methods are used such as the [Runge-Kutta Method](#RKM). 
 
 
 
@@ -334,13 +331,13 @@ You will find a data block, a parameters block, a transformed parameters block a
 
 ##### Data block
 
-The data block includes the number of data points we have, as well as the number of time steps to run the model over. These two values aren't the same as we don't expect to have observed the transmission of Omega from the very first day of its emergence. To account for this, we seed our model ($I_{t0}$) a month before we observe data. The time point that we seed Omicron is also provided in the data block. 
+The data block includes the number of data points we have, as well as the number of time steps to run the model over. These two values aren't the same as we don't expect to have observed the transmission of Omicron from the very first day of its emergence. To account for this, we seed our model ($I_{t0}$) a month before we observe data. The time point that we seed Omicron is also provided in the data block. 
 
 The data block also contains the parameters and initial conditions we aren't estimating, and of course, our observed data. 
 
 ##### Parameters block
 
-This contains the parameters we want to estimate. Note the bounds we put on parameters, which must all be positive and for rho must be between 0 and 1. 
+This contains the parameters we want to estimate. Note the bounds we put on parameters, which must all be positive and for $\rho$ must be between 0 and 1. 
 
 ##### Transformed parameters block
 
@@ -352,7 +349,7 @@ This contains the model likelihood and priors.
 
 ##### Generated quantities block
 
-This contains code to calculate any other quantities of interesr, that are not needed for the model block. In this instance, we will calculate $R_0$.
+This contains code to calculate any other quantities of interest, that are not needed for the model block. In this instance, we will calculate $R_0$.
 
 
 **Take some time to read over the model and check it makes sense.**
@@ -361,18 +358,18 @@ This contains code to calculate any other quantities of interesr, that are not n
 
 ### <a id="RKM"></a> Method 2: Runge-Kutta Method
 
-This second method builds on Eulers method, but rather than calculating a single rate of change at each time step, we calculate 4 different slopes. These slopes are then used as a weighted average to approximate the actual rate of change of states. Because we calculate multiple slops at each interval, we obtain a more accurate approximation. For a more detailed visualisation of this method, see [here](https://www.haroldserrano.com/blog/visualizing-the-runge-kutta-method#:~:text=The%20Runge%2DKutta%20Method%20is,uses%20them%20as%20weighted%20averages).  
+This second method builds on Euler's method, but rather than calculating a single rate of change at each time step, we calculate 4 different slopes. These slopes are then used as a weighted average to approximate the actual rate of change of states. Because we calculate multiple slopes at each interval, we obtain a more accurate approximation. For a more detailed visualisation of this method, see [here](https://www.haroldserrano.com/blog/visualizing-the-runge-kutta-method#:~:text=The%20Runge%2DKutta%20Method%20is,uses%20them%20as%20weighted%20averages).  
 
 To implement this method, we use one of Stan's two inbuilt ODE integrators, *integrate_ode_rk45*, which is the faster (but potentially less robust) of the two. Note, Stan issues warning messages if an integrator fails to solve an ODE (although we have never had this issue), at which point the solver may need to be [adjusted](https://mc-stan.org/docs/2_24/stan-users-guide/control-parameters-for-ode-solving.html) or [swapped](https://mc-stan.org/docs/2_24/stan-users-guide/stiff-ode-section.html). We specify the ODE in Stan using a function within, unsurprisingly, the functions block. See the section of [this tutorial](https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html#coding_the_ode_in_stan) on coding the ODE in Stan for more details. 
 
 **To see how we code up the SEIQR model in Stan using *integrate_ode_rk45* open up *model1_RK_V1.stan*, in the *models* folder, or run *m1_RK* (the name of the compiled Stan model).**
 
-As before, you will find a data block, a parameters block, a transformed parameters block a model block, a generated quantities block, plus a functions block.
+As before, you will find a data block, a parameters block, a transformed parameters block, a model block, a generated quantities block, plus a functions block.
 
 
 # Fitting to simulated data 
 
-Before we fit our model to real data, we will use simulated data to check the model. This is useful to check we have no bugs in our code. Also, even though Stan has lots of helpful diagnostics, we can never be completely certain our sampling algorithm has converged on the true posterior distribution. The diagnostics only confirm when it definitely hasn't. Therefore, using simulated data lets us check that the model can recover known posterior estimates, which gives us more confidence when it comes to fitting data. 
+Before we fit our model to real data, we will use simulated data to check the code's ability to reconstruct the parameter estimates used to simulate the data. This is a useful step to check we have no bugs in our code. Also, even though Stan has lots of helpful diagnostics, we can never be completely certain our sampling algorithm has converged on the true posterior distribution. The diagnostics only confirm when it definitely hasn't converged. Therefore, using simulated data, let us check that the model can recover known posterior estimates, which gives us more confidence when it comes to fitting real-world data. 
 
 ### Defining global parameters 
 
