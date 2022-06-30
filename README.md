@@ -19,7 +19,9 @@ Beneficial:
 
 - [Bayesian workflow for disease transmission modeling in Stan](https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html#2_using_simulated_data_to_understand_our_model)
 - [A students guide to Bayesian statistics is accompanied by a lecture course on youtube](https://www.youtube.com/playlist?list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG)
-
+- [A brief introduction to Stan](https://www.alexpghayes.com/post/2018-12-24_some-things-ive-learned-about-stan/)
+- [The Stan mannual](https://mc-stan.org/)
+- [Statistical Rethinking](https://github.com/rmcelreath/stat_rethinking_2022) - this a thorough course on Bayesian data analysis which uses Stan. The course consists of lectures, homework and can be completed alongside reading the textbook of the same title
 
 ### Intended learning outcomes 
 
