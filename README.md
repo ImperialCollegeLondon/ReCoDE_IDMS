@@ -36,7 +36,7 @@ Upon completion of this tutorial, students will be able to:
 
 ## Project structure 
 
-This project is split into 3 chapters:
+This project is split into 3 chapters, contained in the folder *tutorials*:
 
 - Chapter 1: Designing an infectious disease model
 - Chapter 2: Fitting a single variant model in Stan
