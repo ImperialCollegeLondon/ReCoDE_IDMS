@@ -1,4 +1,4 @@
-software-properties-common
-libnode64
+#software-properties-common
+#libnode64
 #r-cran-v8
 #r-cran-rstan
