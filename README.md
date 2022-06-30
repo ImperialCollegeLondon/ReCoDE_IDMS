@@ -109,6 +109,7 @@ This folder contains the compartmental models used in part 1.
 
 This file contains figures used in the RMD as learning resources, and can largely be ignored. 
 
+### Try sample code with [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jianlianggao/ReCoDE_IDMS/develop?urlpath=rstudio)
 
 ##### 
 
