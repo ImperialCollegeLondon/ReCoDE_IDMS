@@ -8,4 +8,4 @@ install.packages("https://cran.r-project.org/src/contrib/Archive/tidyselect/tidy
 install.packages("https://cran.r-project.org/src/contrib/Archive/dplyr/dplyr_1.0.6.tar.gz", repos = NULL, type = "source")
 install.packages("https://cran.r-project.org/src/contrib/Archive/V8/V8_4.1.0.tar.gz", repos = NULL, type = "source")
 #install.packages('rstan')
-devtools::install_version("rstan","2.21.5", repos = "https://cran.r-project.org/")
+devtools::install_version("rstan","2.21.5")
