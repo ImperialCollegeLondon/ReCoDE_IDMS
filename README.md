@@ -109,22 +109,11 @@ This folder contains the compartmental models used in part 1.
 
 This file contains figures used in the RMD as learning resources, and can largely be ignored. 
 
-### Try sample code with [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jianlianggao/ReCoDE_IDMS/develop?urlpath=rstudio)
-
-##### 
-
-```diff 
-
-@@ How to Use the Code @@
-
-! Requirements
-
-- R (version XXX or higher)
-- RStudio (if needed)
-- packages
-  - rstan
-  - others (for example ....)
-
-! example:
-+ XXXXXX
-```
+### Try the code with Docker container:
+If you have Docker engine installed on your computer, please set Docker engine to use 8GB RAM, 4GB Swap, and 4 CPUs. For chapter 3.Rmd, you need 32GB RAM, otherwise, the code will crash.
+Pull the container image in a command window (Windows) or a terminal window (Mac or Linux) by running docker pull jianlianggao/recode_idms:20220703
+When the image is pulled, to run the image in a container instance, please run the following command
+`docker run --rm -p 127.0.0.1:8787:8787 -v ${pwd}:/home/rstudio -e DISABLE_AUTH=true jianlianggao/recode_idms:20220703`
+If the above command runs successfully, please keep the command window (or terminal window) opened in the background.
+View RStudio from your favourite web browser by visiting 127.0.0.1:8787
+In RStudio in your web browser, please run config.R before running any other code.
