@@ -15,8 +15,7 @@
 SEIQR2 = function(times, current_state, params){
   
   with(as.list(c(current_state, params)),{
-    N <- S + ID + ED + EO + IO + R + QD + QO + SO
-    
+  
     ##  model interventions
 
     
@@ -33,17 +32,17 @@ SEIQR2 = function(times, current_state, params){
   
     
     
-    dS = - (foiD+foiO)* S - nu * S 
+    dS = - (foiD+foiO) * S - nu * S 
     dED = foiD * S - sigmaD * ED
     dEO = foiO * (S+SO) - sigmaO * EO
     
     dID = (1-rhoD) * sigmaD * ED - gammaD * ID 
     dIO = (1-rhoO) * sigmaO * EO - gammaO * IO 
     
-    dQD =  rhoD* sigmaD * ED  - gammaD * QD
-    dQO =  rhoO * sigmaO * EO - gammaO * QO
+    dQD =  rhoD * sigmaD * ED  - gammaD * QD
+    dQO =  rhoO * sigmaO * EO  - gammaO * QO
       
-    dR = gammaD * (ID+ QD) + gammaO * (IO + QD) - epsilon * R + nu * S
+    dR = gammaD * (ID+ QD) + gammaO * (IO + QO) - epsilon * R + nu * S
     
     dSO = epsilon * R - foiO * SO 
     

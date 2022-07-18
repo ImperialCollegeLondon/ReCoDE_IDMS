@@ -7,8 +7,8 @@
   int<lower = 1> n_recov;            // recovered 
   int<lower = 1> n_pop;              // population 
  
-  real<lower = 0> sigma[n_var];             // progression rate
-  real<lower = 0> gamma[n_var];             // recovery rates 
+  real<lower = 0> sigma[n_var];      // progression rate
+  real<lower = 0> gamma[n_var];      // recovery rates 
 
   
   int y_D[n_data_D];                 // data, reported incidence each day (Delta)
@@ -18,9 +18,9 @@
   int <lower = 0> time_fit_O ;       // index number of days to run the model for before fitting (Omicron)
   int <lower = 0> time_int_start;    // index when to start interventions
   int <lower = 0> time_int_end;      // index when to end interventions
-  int scale_time_step ; // amount to reduce time step by when solving 
-  real <lower = 0> nu ;
-  real<lower = 1> I0[n_var];
+  int scale_time_step ;              // amount to reduce time step by when solving 
+  real <lower = 0> nu ;              // vaccination 
+  real <lower = 1> I0[n_var];        // seed
 
 
   }
@@ -44,14 +44,14 @@
   parameters { // this is what we want to estimate 
   real<lower = 0> beta[n_var];
   real<lower = 0, upper = 1> rho[n_var]; 
-  //  real<lower = 0, upper = 1> omega;
+  real<lower = 0, upper = 1> omega;
   real<lower = 0> k;
   real<lower = 0> epsilon; 
   }
   
   
   transformed parameters{
-    real omega = 0;
+  
   // compartments 
   
   real  S[n_ts_scale+1];
@@ -171,11 +171,11 @@ lambda_fit_O[(t-time_fit_O+1)] =  lambda_days[t,2];
  
  // priors
   
-  beta ~ normal(2,.5);
+  beta ~ normal(2.2,1);
   rho ~ beta(2,8);
   k ~ exponential(0.01);
-  //omega ~ beta(1,1);
-  epsilon ~ exponential(400); 
+  omega ~ beta(1,1);
+  epsilon ~ normal(0.003, 0.001); 
   
 
   }
