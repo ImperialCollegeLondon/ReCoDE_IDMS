@@ -27,9 +27,9 @@ Beneficial:
 
 Upon completion of this tutorial, students will be able to:
 
-1.	design an infectious disease compartmental model to answer public health questions. 
+1.  design an infectious disease compartmental model to answer public health questions. 
 2.  compare methods of solving ODE using Stan. 
-3.	write a Stan model to fit an infectious disease model.
+3.  write a Stan model to fit an infectious disease model.
 4.  interpret Stan model diagnostics and implement appropriate solutions. 
 5.  structure R code into files based on functionality. 
 6.  write tests in R to check code. 
@@ -73,17 +73,19 @@ Each RMD file takes as in input multiple functions, each with a specific purpose
 
 This folder contains all the functions needed to run the Rmd file. As stated above, each function has a specific purpose and the functions are designed to be run in order. The functions are as follows: 
 
-- *simulate_data.R*: A function to produce simulated reported incidence data using the model *model1_deSolve.R*. Takes as input parameter values for the model. Outputs a data frame of solutions to the derivatives of all compartments at each time step. 
+- *simulate_data.R*: Functions to produce simulated reported incidence data using the model *model1_deSolve.R* or *model2_deSolve.R*. Takes as input parameter values for the model. Outputs a data frame of solutions to the derivatives of all compartments at each time step. 
 
-- *calc_sim_incidence.R*: A function to calculate the simulated reported incidence. Takes as input a data frame of solutions to the derivatives of all compartments at each time step. Outputs a data frame and ggplot of reported incidence over time. 
+- *calc_sim_incidence.R*: Functions to calculate the simulated reported incidence. Takes as input a data frame of solutions to the derivatives of all compartments at each time step. Outputs a data frame and ggplot of reported incidence over time. 
 
-- *run_stan_models.R*: A function to fit a stan model. Uses the function *draw_init_values.R*. At minimum, takes as in put a list of data to fit the model and a stan model. Outputs a fitted stan model. 
+- *run_stan_models.R*: Function to fit a stan model. Uses the function *draw_init_values.R*. At minimum, takes as in put a list of data to fit the model and a Stan model. Outputs a fitted stan model. 
 
-- *draw_init_values.R*: A function sourced within *run_stan_models.R*  which generates a different starting values for each Markov chain. Takes as input a seed value and outputs an initial value for each parameter and each chain. 
+- *draw_init_values.R*: Functions sourced within *run_stan_models.R*  which generates a different starting values for each Markov chain. Takes as input a seed value and the number of varaints the model is fitting to. Outputs an initial value for each parameter and each chain. 
 
-- *diagnose_stan_fit.R*: a function to run diagnostics on a Stan fit. Takes as input a fitted  stan model and the parameters to check. Outputs the number of divergent transitions, diagnostic plots and parameter summary statistics. 
+- *diagnose_stan_fit.R*: a function to run diagnostics on a Stan fit. Takes as input a fitted  Stan model and the parameters to check. Outputs the number of divergent transitions, diagnostic plots and parameter summary statistics. 
 
 - *plot_model_fit.R*: a function to to plot the results of a fitted stan model against the data to which it was fit. Takes as input a fitted Stan model, the name of the variables to be plotted, and the simulated or observed data.
+
+- *compare_param_est.R*: a function to compare  parameter estimates between models or methods of solving ODEs, i.e., in order to check whether a Stan model is able to recover true parameter estimates from simulated data. Takes as input a vector of true parameter values, estimated posterior mean and 95% CrI from a Stan fit and parameter names. Outputs plots comparing parameter values.  
 
 ### models:
 
