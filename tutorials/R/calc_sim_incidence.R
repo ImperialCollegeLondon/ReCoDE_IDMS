@@ -102,8 +102,8 @@ calc_sim_incidence_multi_var = function(
   # add noise to data 
   set.seed(14)
   for (i in 1:nrow(data)){
-    data$rep_inc_D_noise[i] = rnbinom(1, mu = data$rep_inc_D[i], size = 30)
-    data$rep_inc_O_noise[i] = rnbinom(1, mu = data$rep_inc_O[i], size = 30)
+    data$rep_inc_D_noise[i] = rnbinom(1, mu = data$rep_inc_D[i], size = 10)
+    data$rep_inc_O_noise[i] = rnbinom(1, mu = data$rep_inc_O[i], size = 10)
   }
 
   # extract variant specific dates to fit 

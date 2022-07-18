@@ -24,8 +24,8 @@ run_stan_models = function(
   list_data, 
   model,
   n_chains = 3,
-  n_iter = 2000,
-  n_warmup = 1000, 
+  n_iter = 1000,
+  n_warmup = 500, 
   seed_values = c(1,2,3),
   n_var =1,
   model_no=1){

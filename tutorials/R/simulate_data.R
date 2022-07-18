@@ -113,14 +113,14 @@ simulate_data_multi_var = function(
   
   
   initial_state = c(
-    S = n_pop - n_recov - n_inf_D,
+    S  = n_pop - n_recov - n_inf_D,
     ED = 0 ,
     ID = n_inf_D ,
     EO = 0,
     IO = 0,
     QD = 0,
     QO = 0,
-    R = n_recov,
+    R  = n_recov,
     SO = 0
   )
   
@@ -139,7 +139,8 @@ simulate_data_multi_var = function(
     omega = omega,
     time_switch = time_int_start,
     time_switch_off =time_int_end,
-    nu = nu 
+    nu = nu,
+    N = n_pop - n_recov 
   )
   
   

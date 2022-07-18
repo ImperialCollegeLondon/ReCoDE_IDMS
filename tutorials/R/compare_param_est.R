@@ -1,5 +1,5 @@
-# Function to compare parameter estimates between models or methods------------#
-# methods of solving ODEs. ----------------------------------------------------# 
+# Function to compare parameter estimates between models or methods of --------#
+# solving ODEs.  --------------------------------------------------------------# 
 
 
 # Input:
@@ -8,7 +8,7 @@
 # - true_param_values: vector of true parameter values, user defined (class = numeric)
 # - param_values1: mean and 95% CrI of parameter values, user defined estimated by model 1 (class = matrix or data.frame). 
 # - param_values2: mean and 95% CrI of parameter values, user defined estimated by model 2 (class = matrix or data.frame). 
-# - model_names: names of the two models / methods being compared, assumed to be EU and RK (class = character)
+# - model_names: if comparing names of the  model(s) / method(s) being compared, assumed to be EU and RK (class = character)
 
 # Output: 
 
