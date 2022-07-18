@@ -171,7 +171,7 @@ samp = rbeta(10000,2,8)
 qplot(samp)
 ```
 
-![](chapter-1_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+![](chapter_1_files/figure-html/rho-prior-1.png)<!-- -->
 
 
 Another way to explore the shape of distributions is the [distribution zoo](https://ben18785.shinyapps.io/distribution-zoo/), created by Ben Lambert and Fergus Cooper. 
@@ -196,7 +196,7 @@ Intuitively, this is due to the fact that only a proportion $(1-\rho)$ of subjec
 
 ```r
 set.seed(12)
-R0 = runif(10000,4,8) # draw randomly 10,000 values between 4 and 8 
+R0 = runif(10000,4,10) # draw randomly 10,000 values between 4 and 10 
 gamma = 1/4.17
 rho = runif(10000,0,0.5) 
 
@@ -209,16 +209,16 @@ quantile(beta, probs = c(0.025,0.5,0.975))
 
 ```
 ##     2.5%      50%    97.5% 
-## 1.116404 1.913991 3.301796
+## 1.156041 2.236819 4.067416
 ```
 
 ```r
 # draw from a  normal distribution 
-beta_prior = rnorm(10000,2,.5)
+beta_prior = rnorm(10000,2.2,1)
 qplot(beta_prior)
 ```
 
-![](chapter-1_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+![](chapter_1_files/figure-html/beta-prior-1.png)<!-- -->
 
 ```r
 # check values of beta support R0 range 
@@ -228,17 +228,17 @@ quantile(R0_p,  probs = c(0.025,0.1,0.25, 0.5, 0.75,0.9,0.975))
 ```
 
 ```
-##      2.5%       10%       25%       50%       75%       90%     97.5% 
-##  2.869754  3.849855  4.817311  6.099219  7.545821  8.993784 10.532269
+##       2.5%        10%        25%        50%        75%        90%      97.5% 
+##  0.7447701  2.7193864  4.5400148  6.6724047  9.0758795 11.4707453 14.2731938
 ```
 
 ```r
 qplot(R0_p)
 ```
 
-![](chapter-1_files/figure-html/unnamed-chunk-3-2.png)<!-- -->
+![](chapter_1_files/figure-html/beta-prior-2.png)<!-- -->
 
-**We can see that $\beta \sim ND(2,.5)$ supports $R_0$ values mostly between 4 and 8, but allow for extreme values of $R_0$ if the data supports it.** 
+**We can see that $\beta \sim ND(2.2,1)$ supports $R_0$ values mostly between 4 and 10, but allow for extreme values of $R_0$ if the data supports it.** 
 
 
 

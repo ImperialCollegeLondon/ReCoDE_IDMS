@@ -9,15 +9,14 @@ output:
 
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 In this chapter, we are going to fit the single variant model designed in chapter 1, using Stan. 
 
 First, we need to load some packages. We also need to source the functions needed to run this script, found in the *R* folder. Finally, we need to compile the Stan models, found in the *models* folder. 
 
-```{r message=FALSE, warning=FALSE}
+
+```r
 library(dplyr)
 library(ggplot2)
 library(rstan)
@@ -52,7 +51,8 @@ First, lets set the start and end date over which to fit the model, converted in
 
 As mentioned, we want to seed Omicron 1 month before we fit to data, so we can define that here too. 
 
-```{r}
+
+```r
 date_seed_omicron =  as.Date.character("01-09-2021", format = "%d-%m-%Y") 
 end_date = as.Date.character("23-02-2022", format = "%d-%m-%Y")
 all_dates = seq.Date(from = date_seed_omicron, to = end_date ,  by = "days") # model times
@@ -64,7 +64,8 @@ As we are simulating data, we next need to define both the fixed and estimated p
 
 We are assuming an $R_0$ of 5 and and that $\rho$ is 0.2.
 
-```{r}
+
+```r
 R0 = 5                            # reproduction number 
 immunity = 0.562                  # seroprevalence 
 n_pop = 15810388                  # population
@@ -79,10 +80,10 @@ beta = (R0 * gamma) / (1-rho)     # transmission rate
 
 Next, we simulate our transmission data by solving a set of ODEs using the function *simulate_data_single_var*. The model equations are defined in *models/model1_deSolve*. 
 
-The function requires that we provide the % of immunity in the population, the 
-initial number of infected individuals, the reporting probability, the transmission rate and the time steps at which to solve the model. We can additionally set the population and recovery and latent rates, if we don't want to use the predefined values. The function will return a data frame of solutions to the derivatives of all compartments at each time step. It will also print the plot of each compartment across time, so we can check everything is behaving as expected. 
+The function requires that we provide the % of immunity in the population, the initial number of infected individuals, the reporting probability, the transmission rate and the time steps at which to solve the model. We can additionally set the population and recovery and latent rates, if we don't want to use the predefined values. The function will return a data frame of solutions to the derivatives of all compartments at each time step. It will also print the plot of each compartment across time, so we can check everything is behaving as expected. 
 
-```{r message=FALSE, warning=FALSE}
+
+```r
 sim_data = simulate_data_single_var (
   immunity = immunity, # seroprevalence 
   n_inf = n_inf,       # seed 
@@ -90,9 +91,9 @@ sim_data = simulate_data_single_var (
   beta = beta,         # transmission rate
   ts = ts              # time steps 
 )
-
-
 ```
+
+![](chapter_2_files/figure-html/simulate-data-1.png)<!-- -->![](chapter_2_files/figure-html/simulate-data-2.png)<!-- -->![](chapter_2_files/figure-html/simulate-data-3.png)<!-- -->![](chapter_2_files/figure-html/simulate-data-4.png)<!-- -->![](chapter_2_files/figure-html/simulate-data-5.png)<!-- -->
 
 ### Calculating reported incidence and adding noise to the data 
 
@@ -100,7 +101,8 @@ Next we calculate the reported incidence (i.e., the rate that individuals enter 
 A list is returned which includes a data frame containing the date and the reported incidence (with and without noise). It also a returns a plot of the reported incidence with and without noise. 
 
 
-```{r message=FALSE, warning=FALSE}
+
+```r
 simulated_data = calc_sim_incidence_single_var(
   ODE_data= sim_data,         # ODE solutions
   all_dates = all_dates,      # model dates
@@ -111,6 +113,8 @@ simulated_data = calc_sim_incidence_single_var(
 sim_inc = simulated_data[[1]]
 simulated_data[[2]] # plot of reported incidence with and without noise
 ```
+
+![](chapter_2_files/figure-html/calculate-reported-incidence-1.png)<!-- -->
 
 
 The reported incidence with noise is what we will fit the Stan models to. 
@@ -228,8 +232,8 @@ Running this function will fit our Stan model to the simulated data and return t
 
 First, we are going to fit the model using the Euler method: 
 
-```{r}
 
+```r
 stan_fit_EU = run_stan_models(
   list_data =
     list(
@@ -248,6 +252,10 @@ stan_fit_EU = run_stan_models(
 )
 ```
 
+```
+## Time difference of 31.07438 secs
+```
+
 
 ### Model diagnostics 
 
@@ -256,10 +264,41 @@ To be on the safe side, lets check with some model diagnostics. *diagnose_stan_f
 
 
 
-```{r message=FALSE, warning=FALSE}
-EU_diag = diagnose_stan_fit(stan_fit_EU, pars = c("beta", "rho", "R_0"))
 
+```r
+EU_diag = diagnose_stan_fit(stan_fit_EU, pars = c("beta", "rho", "R_0"))
+```
+
+![](chapter_2_files/figure-html/diagnose-EU1-1.png)<!-- -->
+
+```r
 EU_diag
+```
+
+```
+## $`markov chain trace plots`
+```
+
+![](chapter_2_files/figure-html/diagnose-EU1-2.png)<!-- -->
+
+```
+## 
+## $`univariate marginal posterior distributions`
+```
+
+![](chapter_2_files/figure-html/diagnose-EU1-3.png)<!-- -->
+
+```
+## 
+## $`summary statistics of parameters`
+##           mean      se_mean         sd      2.5%       25%       50%       75%
+## beta 2.1201857 0.0074768725 0.15123149 1.8975327 2.0120366 2.0998440 2.1955781
+## rho  0.4039729 0.0019475674 0.04009354 0.3368118 0.3742744 0.4005873 0.4275271
+## R_0  5.2445714 0.0009289445 0.03540958 5.1714145 5.2215314 5.2445332 5.2679685
+##          97.5%     n_eff      Rhat
+## beta 2.5055947  409.1142 1.0046159
+## rho  0.4980691  423.8028 1.0038597
+## R_0  5.3142524 1452.9881 0.9989401
 ```
 
 The first output shows the bivariate marginal posterior distribution which will show divergent transitions in red, if there are any. Note also, the strong correlation between parameters. The next outputs show markov chain trace plots to check for model convergence and the univariate marginal posterior distribution by chain. 
@@ -277,7 +316,8 @@ The function allow us to calculate the mean and 95% CrI, which are the 2.5% and 
 
 We then plot these against our simulated data, over time.
 
-```{r message=FALSE, warning=FALSE}
+
+```r
 EU_plot = plot_model_fit(stan_fit_EU,
                          variable_model = "lambda",
                          variable_data = "rep_inc_noise",
@@ -286,6 +326,8 @@ EU_plot = plot_model_fit(stan_fit_EU,
 
 EU_plot
 ```
+
+![](chapter_2_files/figure-html/plot_EU1-1.png)<!-- -->
 
 The fit here is poor, as the model peaks too late. Next we will compare this to the the Runge-Kutta Method. 
 
@@ -298,7 +340,8 @@ The fit here is poor, as the model peaks too late. Next we will compare this to 
 
 **Looking at *m1_RK*, you can see we need to add some additional data to the list provided to Stan, namely a vector of time steps at which to solve the model.** 
 
-```{r}
+
+```r
 stan_fit_RK = run_stan_models(
   list_data =
     list(
@@ -318,14 +361,51 @@ stan_fit_RK = run_stan_models(
 )
 ```
 
+```
+## Time difference of 2.517071 mins
+```
+
 **Diagnostics still look good.**
-```{r}
+
+```r
 RK_diag = diagnose_stan_fit(stan_fit_RK, pars = c("beta", "rho", "R_0"))
+```
+
+![](chapter_2_files/figure-html/diagnose-RK1-1.png)<!-- -->
+
+```r
 RK_diag
 ```
 
+```
+## $`markov chain trace plots`
+```
+
+![](chapter_2_files/figure-html/diagnose-RK1-2.png)<!-- -->
+
+```
+## 
+## $`univariate marginal posterior distributions`
+```
+
+![](chapter_2_files/figure-html/diagnose-RK1-3.png)<!-- -->
+
+```
+## 
+## $`summary statistics of parameters`
+##           mean      se_mean         sd      2.5%       25%       50%       75%
+## beta 1.4576613 0.0010627769 0.02235308 1.4174613 1.4425718 1.4550144 1.4719345
+## rho  0.1942493 0.0005025086 0.01051176 0.1754508 0.1872102 0.1932687 0.2013505
+## R_0  4.8967717 0.0006947997 0.02190915 4.8562482 4.8815042 4.8960670 4.9114831
+##          97.5%    n_eff     Rhat
+## beta 1.5076162 442.3749 1.004954
+## rho  0.2166354 437.5868 1.003838
+## R_0  4.9407966 994.3332 1.003822
+```
+
 **The fit is better than the Euler method, although we are not quite capturing the peak of the epidemic curve.**
-```{r message=FALSE, warning=FALSE}
+
+```r
 RK_plot = plot_model_fit(stan_fit_RK,
                         variable_model = "lambda",
                         variable_data = "rep_inc_noise",
@@ -334,6 +414,8 @@ RK_plot = plot_model_fit(stan_fit_RK,
 
 RK_plot
 ```
+
+![](chapter_2_files/figure-html/plot-RK1-1.png)<!-- -->
 
 
 
@@ -345,15 +427,35 @@ RK_plot
 
 **A8: Lets plot our original values, alongside the mean and 95% CrI of the posterior distributions of our estimated parameters, using the function *compare_param_est* **
   
-```{r message=FALSE, warning=FALSE}
+
+```r
 compare_param_est(
   parameter_names = c("beta", "rho", "R_0"), # parameters to compare 
   true_param_values = c(beta, rho, R0),  # true values
   param_values1 =  EU_diag[[3]][,c(1,4,8)], # estimated values from model 1 
   param_values2 =  RK_diag[[3]][,c(1,4,8)]  # estimated values from model 2
 )
+```
 
 ```
+## [[1]]
+```
+
+![](chapter_2_files/figure-html/compare-param-1-1.png)<!-- -->
+
+```
+## 
+## [[2]]
+```
+
+![](chapter_2_files/figure-html/compare-param-1-2.png)<!-- -->
+
+```
+## 
+## [[3]]
+```
+
+![](chapter_2_files/figure-html/compare-param-1-3.png)<!-- -->
 
 **It looks like the RK method is better able to recover the parameter values, which makes sense as it fits the date better. The RK method does underestimate the true $R_0$, which explains why the model was not quite able to capture the peak of the epidemic curve.** 
 
@@ -371,8 +473,8 @@ compare_param_est(
 **Once we have solved the model at our desired resolution, we need to aggregate the reported incidence back into days so that we can fit to the data. This is done in the model block using a for loop which adds to the index as it runs**
 
 
-```{r}
 
+```r
 # run the model 
 
 stan_fit_EU2 = run_stan_models(
@@ -392,22 +494,56 @@ stan_fit_EU2 = run_stan_models(
     ), 
   model = m1_EU2 
 )
+```
 
-
+```
+## Time difference of 1.750497 mins
 ```
 
 **Reducing the time step by 6 or 7 should be sufficient, and is still faster than the RK method.**
 
 **Let's check the diagnostics now and see if we are able to improve the accuracy. **
 
-```{r}
-EU2_diag = diagnose_stan_fit(stan_fit_EU2, pars = c("beta", "rho", "R_0"))
 
+```r
+EU2_diag = diagnose_stan_fit(stan_fit_EU2, pars = c("beta", "rho", "R_0"))
+```
+
+![](chapter_2_files/figure-html/diagnose-EU2-1.png)<!-- -->
+
+```r
 EU2_diag
 ```
 
+```
+## $`markov chain trace plots`
+```
 
-```{r message=FALSE, warning=FALSE}
+![](chapter_2_files/figure-html/diagnose-EU2-2.png)<!-- -->
+
+```
+## 
+## $`univariate marginal posterior distributions`
+```
+
+![](chapter_2_files/figure-html/diagnose-EU2-3.png)<!-- -->
+
+```
+## 
+## $`summary statistics of parameters`
+##           mean      se_mean         sd      2.5%       25%       50%       75%
+## beta 1.5300896 0.0011393195 0.02480530 1.4849911 1.5129051 1.5282113 1.5461856
+## rho  0.2132518 0.0005091546 0.01116703 0.1934163 0.2052791 0.2126142 0.2208024
+## R_0  5.0187005 0.0005883898 0.01965081 4.9800628 5.0049975 5.0190336 5.0319124
+##          97.5%     n_eff      Rhat
+## beta 1.5816731  474.0215 0.9991952
+## rho  0.2364666  481.0344 0.9994794
+## R_0  5.0586932 1115.4001 0.9995148
+```
+
+
+
+```r
 EU2_plot = plot_model_fit(stan_fit_EU2,
                           variable_model = "lambda_days", 
                           variable_data = "rep_inc_noise",
@@ -417,9 +553,12 @@ EU2_plot = plot_model_fit(stan_fit_EU2,
 EU2_plot
 ```
 
+![](chapter_2_files/figure-html/plot-EU2-1.png)<!-- -->
+
 **Finally, lets compare parameter estimates again**
 
-```{r message=FALSE, warning=FALSE}
+
+```r
 compare_param_est(
   parameter_names = c("beta", "rho", "R0"),
   true_param_values = c(beta, rho, R0),
@@ -428,18 +567,27 @@ compare_param_est(
 )
 ```
 
+```
+## [[1]]
+```
+
+![](chapter_2_files/figure-html/compare-param-2-1.png)<!-- -->
+
+```
+## 
+## [[2]]
+```
+
+![](chapter_2_files/figure-html/compare-param-2-2.png)<!-- -->
+
+```
+## 
+## [[3]]
+```
+
+![](chapter_2_files/figure-html/compare-param-2-3.png)<!-- -->
+
 **This final fit is able to recover our true parameters, although the model doesn't quite capture the peak. However, as the data incorporates additional noise, we would not expect the model to perfectly fit every point, otherwise we would be concerned about over-fitting the model.** 
 
 
 Having compared the two methods fitting to single variant data, in chapter 3 we will look at fitting a more complicated multi-variant model using the Euler method. 
-
-
-# References 
-
-
-
-- (1) Madhi SA, Kwatra G, Myers JE, et al. Population Immunity and Covid-19 Severity with Omicron Variant in South Africa. N Engl J Med 2022; 386(14): 1314-26.
-- (2) Tanaka H, Ogata T, Shibata T, et al. Shorter Incubation Period among COVID-19 Cases with the BA.1 Omicron Variant. Int J Environ Res Public Health 2022; 19(10).
-- (3) Lavezzo E, Franchin E, Ciavarella C, et al. Suppression of a SARS-CoV-2 outbreak in the Italian municipality of Vo’. Nature 2020; 584(7821): 425-9.
-- (4) Liu, Y. & Rocklov, J. Liu Y, Rocklov J. The reproductive number of the Delta variant of SARS-CoV-2 is far higher compared to the ancestral SARS-CoV-2 virus. J Travel Med 2021; 28(7).
-- (5) Mutevedzi PC, Kawonga M, Kwatra G, et al. Estimated SARS-CoV-2 infection rate and fatality risk in Gauteng Province, South Africa: a population-based seroepidemiological survey. Int J Epidemiol 2022; 51(2): 404-17.
