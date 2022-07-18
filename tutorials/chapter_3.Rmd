@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, label= "set-up"}
 library(dplyr)
 library(ggplot2)
 library(rstan)
@@ -104,7 +104,7 @@ Note, this time we have two likelihood functions, one for each variant. As befor
 # Simulating multivariant data 
 
 Defining key dates: 
-```{r warning=FALSE}
+```{r warning=FALSE, label= "define-dates"}
 
 # Date we start fitting the incidence to Delta 
 date_fit_D  =   as.Date.character("01-06-2021", format = "%d-%m-%Y")
@@ -132,7 +132,7 @@ all_dates_mv = seq.Date(from = date_seed_D, to = end_date ,  by = "days") # mode
 
 As we are simulating data again, we need to define both the estimated and fixed parameters:
 
-```{r warning=FALSE}
+```{r warning=FALSE, label= "parameter-values"}
 
 # Define  variables 
   n_pop = 15810388                     # Population
@@ -163,7 +163,7 @@ As we are simulating data again, we need to define both the estimated and fixed 
 Like the function *simulate_data_single_var* in chapter 2, *simulate_data_multi_var* takes as input our model parameters, starting values and time steps. This time we also need to tell the model when to start and end interventions and when to seed the Omicron variant. The model equations are defined in *models/model2_deSolve.R*. 
 
 
-```{r warning=FALSE}
+```{r warning=FALSE, label= "simulate-data"}
 multi_var_sim_data = simulate_data_multi_var(
   immunity = immunity_mv, 
   n_inf_D = n_inf_D,
@@ -191,7 +191,7 @@ multi_var_sim_data = simulate_data_multi_var(
 
 We can then plot the reported incidence with noise for the Delta and Omicron variants. 
 
-```{r warning=FALSE}
+```{r warning=FALSE, label= "calculate-reported-incidence"}
 multi_var_sim_inc = calc_sim_incidence_multi_var(
                              ODE_data = multi_var_sim_data,
                              all_dates = all_dates_mv,
@@ -208,7 +208,7 @@ multi_var_sim_inc[[2]] # Plot
 
 As we are assuming that incidence between July 2021 - October 2021 is Delta and that incidence between October 2021 and December 2021 is Omicron, all other data are "NA" which we need to discard: 
 
-```{r warning=FALSE}
+```{r warning=FALSE, label= "remove-NA"}
 
 # Removing missing data 
  y_D = multi_var_sim_inc[[1]]$rep_inc_D_noise[!is.na(multi_var_sim_inc[[1]]$rep_inc_D_noise)]
@@ -222,7 +222,7 @@ The multivariate SEIQRS model using Euler's method is coded up in *model2_Euler_
 Once you are happy with the model, we can fit it to the data:
 
   
-```{r}
+```{r, label= "fit-EU1"}
 
 stan_fit_m2_EU1 = run_stan_models(
   list_data =
@@ -257,7 +257,7 @@ stan_fit_m2_EU1 = run_stan_models(
 
 Stan is providing us with a series of warnings that the chains have not mixed and that our posterior distributions are unreliable. To investigate this further, run diagnostics on the model as before: 
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, label= "diagnose-EU1"}
 m2_EU1_diag = diagnose_stan_fit(
   stan_fit_m2_EU1, #
   pars = c("beta[1]", "rho[1]","rho[2]", "beta[2]", "R_0[1]", "R_0[2]", "epsilon", "omega"))
@@ -278,7 +278,7 @@ If a model is non-identifiable it means that two values of a parameter are equal
 
 If we plot the model fit against the data, we can see that the model is able to recreate the Delta incidence but only partly captures the Omicron transmission dynamics: 
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE, label= "plot-EU1"}
 plot_model_fit_multi_var(
   stan_fit_m2_EU1,
   variable_model = "lambda_days",
@@ -287,7 +287,7 @@ plot_model_fit_multi_var(
 ```
 To explore this further, we can even plot the model fit for each chain separately. This allows us to confirm that the chains with a high log posterior are indeed exploring parameter values that are able to capture the transmission dynamics:
 
-```{r warning=FALSE}
+```{r warning=FALSE, include=FALSE, label="chain-diagnostics"}
 
 # extract the posterior distributions by chain 
 extract_chains = rstan::extract(stan_fit_m2_EU1, permuted = FALSE, inc_warmup = FALSE, pars = "lambda_days")
@@ -328,7 +328,7 @@ Alternatively, we can take failure to converge as a sign that our model needs im
 
 For $\epsilon$, the rate that immunity wanes against Omicron, the model is exploring two models. The first is ~0.005 and the second is ~0.0075, corresponding to immunity last on average for 200 days and 130 days respectively. Based on the diagnostics we ran, we know that an average duration of immunity around 200 days is more likely. We originally assumed $\epsilon \sim ND(0.003,0.001)$: 
 
-```{r warning=FALSE}
+```{r warning=FALSE, label = "epsilon-prior"}
 eps_prior = rnorm(100000, 0.003,0.001)
 quantile(eps_prior, probs=c(0.025,0.25,0.5,0.75,0.975))
 ```
@@ -337,7 +337,7 @@ In isolation, this prior supports parameter values between 0.001-0.005, or immun
 
 *model2_Euler_V2.stan* is exactly the same as *model2_Euler_V1.stan* but with the updated prior: 
 
-```{r}
+```{r, label= "fit-EU2"}
 stan_fit_m2_EU2 = run_stan_models(
   list_data =
     list(
@@ -369,7 +369,7 @@ stan_fit_m2_EU2 = run_stan_models(
 )
 ``` 
 This time, we recieved no warnings and the diagnostics all look good:
-```{r warning=FALSE}
+```{r warning=FALSE, label= "diagnose-EU2"}
 m2_EU2_diag = diagnose_stan_fit(
   stan_fit_m2_EU2, #
    pars = c("beta[1]", "beta[2]", "rho[1]","rho[2]",  "R_0[1]", "R_0[2]",  "omega", "epsilon"))
@@ -378,7 +378,7 @@ m2_EU2_diag
 ```
 
 The model fit is also good:
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r echo=TRUE, message=FALSE, warning=FALSE, label= "plot-EU2"}
 plot_model_fit_multi_var(
   stan_fit_m2_EU2,
   variable_model = "lambda_days",
@@ -387,8 +387,8 @@ plot_model_fit_multi_var(
 ```
 
 
-Finally, we can compare the parameter estiamtes to the true values again: 
-```{r message=FALSE,  warning=FALSE}
+Finally, we can compare the parameter estimates to the true values: 
+```{r message=FALSE,  warning=FALSE, label= "compare-param"}
 compare_param_est(
   parameter_names = c("beta[1]", "beta[2]", "rho[1]","rho[2]",  "R_0[1]", "R_0[2]",  "omega", "epsilon"),
   true_param_values = c(beta_D, beta_O, rho_D, rho_O , R0_D, R0_O, omega, epsilon),
@@ -424,7 +424,7 @@ Where $y_Y$ is the variant specific reported incidence, $y_{tot}$ is the total r
 
 A limitation of genomic surveillance, is that it is often spatiotemporally sparse. Even for SARS-CoV-2, which has had more thorough surveillance than most other infectious diseases, there may be months for which now genomic surveillance was done. For instance, say that no genomic surveillance was undertaken in Gauteng for 1 weeks in June and October respectively. Therefore, for those time period we would have missing data for the variant-specific incidence of Delta and Omicron:     
 
-```{r include=FALSE}
+```{r include=FALSE, label = "calc-missing-data"}
 multi_var_sim_inc_missing_data = multi_var_sim_inc[[1]]
 
 multi_var_sim_inc_missing_data$rep_inc_D_noise = 
@@ -438,7 +438,7 @@ multi_var_sim_inc_missing_data$rep_inc_O_noise =
 ```
 
 
-```{r warning=FALSE}
+```{r warning=FALSE, label = "plot-missing-data"}
 ggplot(multi_var_sim_inc_missing_data, aes(x = date,y = rep_inc_D_noise)) +
   geom_line() +
   geom_line(aes(y= rep_inc_O_noise), color = "red")

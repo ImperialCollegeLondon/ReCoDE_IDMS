@@ -184,7 +184,7 @@ multi_var_sim_data = simulate_data_multi_var(
 )
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-4-1.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-4-2.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-4-3.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-4-4.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-4-5.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-4-6.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-4-7.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-4-8.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-4-9.png)<!-- -->
+![](chapter_3_files/figure-html/simulate-data-1.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-2.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-3.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-4.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-5.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-6.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-7.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-8.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-9.png)<!-- -->
 
 We can then plot the reported incidence with noise for the Delta and Omicron variants. 
 
@@ -204,7 +204,7 @@ multi_var_sim_inc = calc_sim_incidence_multi_var(
 multi_var_sim_inc[[2]] # Plot 
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](chapter_3_files/figure-html/calculate-reported-incidence-1.png)<!-- -->
 
 As we are assuming that incidence between July 2021 - October 2021 is Delta and that incidence between October 2021 and December 2021 is Omicron, all other data are "NA" which we need to discard: 
 
@@ -274,7 +274,7 @@ stan_fit_m2_EU1 = run_stan_models(
 ```
 
 ```
-## Time difference of 16.52359 mins
+## Time difference of 15.0706 mins
 ```
 
 Stan is providing us with a series of warnings that the chains have not mixed and that our posterior distributions are unreliable. To investigate this further, run diagnostics on the model as before: 
@@ -286,7 +286,7 @@ m2_EU1_diag = diagnose_stan_fit(
   pars = c("beta[1]", "rho[1]","rho[2]", "beta[2]", "R_0[1]", "R_0[2]", "epsilon", "omega"))
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](chapter_3_files/figure-html/diagnose-EU1-1.png)<!-- -->
 
 ```r
 m2_EU1_diag
@@ -296,14 +296,14 @@ m2_EU1_diag
 ## $`markov chain trace plots`
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-8-2.png)<!-- -->
+![](chapter_3_files/figure-html/diagnose-EU1-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-8-3.png)<!-- -->
+![](chapter_3_files/figure-html/diagnose-EU1-3.png)<!-- -->
 
 ```
 ## 
@@ -350,37 +350,10 @@ plot_model_fit_multi_var(
   data = multi_var_sim_inc[[1]])
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
+![](chapter_3_files/figure-html/plot-EU1-1.png)<!-- -->
 To explore this further, we can even plot the model fit for each chain separately. This allows us to confirm that the chains with a high log posterior are indeed exploring parameter values that are able to capture the transmission dynamics:
 
 
-```r
-# extract the posterior distributions by chain 
-extract_chains = rstan::extract(stan_fit_m2_EU1, permuted = FALSE, inc_warmup = FALSE, pars = "lambda_days")
-
-# for each chain 
-for(i in 1:3){
-print(extract_chains[,i,] %>%  
-  as.data.frame() %>% 
-  summarise_all(~ mean(.)) %>%  # take the mean across all iterations 
-  mutate(model = "model") %>%  
-  pivot_longer(!model) %>%  
-  separate(col = name, into = c("time", "variant"), sep = ",") %>% 
-  pivot_wider(values_from = value, names_from = variant) %>% 
-  rename("Delta_model"= `1]` , "Omicrion_model"=`2]`) %>%  
-  bind_cols(Omicron_inc = multi_var_sim_inc[[1]]$rep_inc_O_noise,
-            Delta_inc = multi_var_sim_inc[[1]]$rep_inc_D_noise,
-            Date = multi_var_sim_inc[[1]]$date) %>%  
-  ggplot(aes(x =Date, y = Omicron_inc))+
-  geom_point()+
-  geom_line(aes(y=Omicrion_model)) + 
-  geom_point(aes(y = Delta_inc), color = "red")+
-  geom_line(aes(y = Delta_model), color = "red")
-)
-}
-```
-
-![](chapter_3_files/figure-html/unnamed-chunk-10-1.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-10-2.png)<!-- -->![](chapter_3_files/figure-html/unnamed-chunk-10-3.png)<!-- -->
 
 
 As expected, chains 1 and 2 are able to capture the transmission dynamics of Omicron, whilst chain 3 peaks too early. This makes sense, given that this chain was exploring much higher values of the Omicron $R_0$.
@@ -444,7 +417,7 @@ stan_fit_m2_EU2 = run_stan_models(
 ```
 
 ```
-## Time difference of 12.8402 mins
+## Time difference of 11.60144 mins
 ```
 This time, we recieved no warnings and the diagnostics all look good:
 
@@ -454,7 +427,7 @@ m2_EU2_diag = diagnose_stan_fit(
    pars = c("beta[1]", "beta[2]", "rho[1]","rho[2]",  "R_0[1]", "R_0[2]",  "omega", "epsilon"))
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](chapter_3_files/figure-html/diagnose-EU2-1.png)<!-- -->
 
 ```r
 m2_EU2_diag
@@ -464,14 +437,14 @@ m2_EU2_diag
 ## $`markov chain trace plots`
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-13-2.png)<!-- -->
+![](chapter_3_files/figure-html/diagnose-EU2-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-13-3.png)<!-- -->
+![](chapter_3_files/figure-html/diagnose-EU2-3.png)<!-- -->
 
 ```
 ## 
@@ -506,10 +479,10 @@ plot_model_fit_multi_var(
   data = multi_var_sim_inc[[1]])
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
+![](chapter_3_files/figure-html/plot-EU2-1.png)<!-- -->
 
 
-Finally, we can compare the parameter estiamtes to the true values again: 
+Finally, we can compare the parameter estimates to the true values: 
 
 ```r
 compare_param_est(
@@ -524,56 +497,56 @@ compare_param_est(
 ## [[1]]
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](chapter_3_files/figure-html/compare-param-1.png)<!-- -->
 
 ```
 ## 
 ## [[2]]
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-15-2.png)<!-- -->
+![](chapter_3_files/figure-html/compare-param-2.png)<!-- -->
 
 ```
 ## 
 ## [[3]]
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-15-3.png)<!-- -->
+![](chapter_3_files/figure-html/compare-param-3.png)<!-- -->
 
 ```
 ## 
 ## [[4]]
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-15-4.png)<!-- -->
+![](chapter_3_files/figure-html/compare-param-4.png)<!-- -->
 
 ```
 ## 
 ## [[5]]
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-15-5.png)<!-- -->
+![](chapter_3_files/figure-html/compare-param-5.png)<!-- -->
 
 ```
 ## 
 ## [[6]]
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-15-6.png)<!-- -->
+![](chapter_3_files/figure-html/compare-param-6.png)<!-- -->
 
 ```
 ## 
 ## [[7]]
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-15-7.png)<!-- -->
+![](chapter_3_files/figure-html/compare-param-7.png)<!-- -->
 
 ```
 ## 
 ## [[8]]
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-15-8.png)<!-- -->
+![](chapter_3_files/figure-html/compare-param-8.png)<!-- -->
 
 The model is broadly able to capture all the parameter values. As the is strong correlation between the parameters values, we might say they are weakly identified, as the posterior distribution mode is a ridge (see the pairs plot). Nevertheless, with sensible priors we are still able to capture the parameter values and obtain a sufficient sample size (see n_eff), indicating that results are unbiased and can be trusted. 
 
@@ -612,7 +585,7 @@ ggplot(multi_var_sim_inc_missing_data, aes(x = date,y = rep_inc_D_noise)) +
   geom_line(aes(y= rep_inc_O_noise), color = "red")
 ```
 
-![](chapter_3_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+![](chapter_3_files/figure-html/plot-missing-data-1.png)<!-- -->
 
 
 Whereas in R, we can account for missing data as "NA", in Stan missing data cannot be included. Therefore, if we want to fit the model to incidence data where date for certain dates are missing, we need to include an array where we index the dates to be fit. This is similar to seeding the model 1 month prior to fitting, we passed an index to the Stan model telling it at which time point to start fitting the model. 
