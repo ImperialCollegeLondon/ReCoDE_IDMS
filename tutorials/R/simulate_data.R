@@ -34,6 +34,16 @@ simulate_data_single_var = function(
   # source model 
   source("models/model1_deSolve.R")
   
+  if(n_pop <0 ) stop("n_pop cannot be negative")
+  if(immunity < 0 | immunity > 1) stop("immunity should be between 0 and 1")
+  if(rho < 0 | rho > 1) stop("Rho should be between 0 and 1")
+  if(n_inf < 0) stop("n_inf cannot be negative")
+  if(gamma < 0) stop("gamma cnanot be negative")
+  if(sigma < 0) stop("sigma cannot be negative")
+  if(beta < 0) stop("beta cannot be negative")  
+  if(length(ts) < 2) stop("must be at least two time steps")
+
+  
   # initial values 
   n_recov = n_pop * immunity 
 
@@ -107,6 +117,26 @@ simulate_data_multi_var = function(
   
   # source model 
   source("models/model2_deSolve.R")
+  
+  
+  
+  if(n_pop <0 ) stop("n_pop cannot be negative")
+  if(immunity < 0 | immunity > 1) stop("immunity should be between 0 and 1")
+  if(rho_D < 0 | rho_D > 1 | rho_O < 0 | rho_O > 1) stop("rho should be between 0 and 1")
+  if(omega < 0 | omega > 1) stop("omega should be between 0 and 1")
+  if(n_inf_D < 0 | n_inf_O < 0) stop("n_inf cannot be negative")
+  if(gamma_D < 0 | gamma_O < 0) stop("gamma cnanot be negative")
+  if(sigma_D < 0 | sigma_O < 0) stop("sigma cannot be negative")
+  if(beta_D < 0 | beta_O < 0) stop("beta cannot be negative") 
+  if(epsilon <0 ) stop("epsilon cannot be negative")
+  if(nu <0 ) stop("nu cannot be negative")
+  if(length(ts) < 2) stop("must be at least two time steps")
+  if(time_int_start < ts[1] | time_int_start > tail(ts,1) | time_int_end < ts[1] | time_int_end > tail(ts,1))
+    stop("interventions must be during modelling time period")
+  if(time_int_start > time_int_end) stop ("interventions must start before they can end")
+  if( time_seed_O < ts[1] | time_seed_O > tail(ts,1)  ) stop("omicron seed must be during modelling time period")
+  
+
   
   # initial values 
   n_recov = n_pop * immunity 
