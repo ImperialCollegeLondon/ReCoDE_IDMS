@@ -38,7 +38,9 @@ Some questions include:
 
 First, lets take a look at the storyboard below. It outlines some of the key steps when designing and building a model logically. 
 
-![Designing a compartmental model.](images/Generic modelling storyboard.png)
+![Designing a compartmental model.] 
+<img src="images/Generic modelling storyboard.png">
+
 
 Briefly, we need to define (1) our research question, (2) population and time period. Then we need to think about (3) how our model can reproduce the observed data. Are we modelling incidence or prevalence data?
 
