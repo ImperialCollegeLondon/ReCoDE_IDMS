@@ -1,5 +1,5 @@
 ---
-title: "Part 1"
+title: "Chapter 3:fitting a single strain model in Stan"
 output: 
   html_document:
     keep_md: true
@@ -48,6 +48,10 @@ In this chapter, we are going to fit a multivariate model to capture the dynamic
 The flow diagram of the multivariate model is shown in the following figure: 
 
 ![Flow diagram of compartmental model.](images/chapter_3_flow_diagram.jpg)
+
+
+
+
 
 
 
@@ -274,7 +278,7 @@ stan_fit_m2_EU1 = run_stan_models(
 ```
 
 ```
-## Time difference of 16.52359 mins
+## Time difference of 18.01348 mins
 ```
 
 Stan is providing us with a series of warnings that the chains have not mixed and that our posterior distributions are unreliable. To investigate this further, run diagnostics on the model as before: 
@@ -444,7 +448,7 @@ stan_fit_m2_EU2 = run_stan_models(
 ```
 
 ```
-## Time difference of 12.8402 mins
+## Time difference of 15.4958 mins
 ```
 This time, we recieved no warnings and the diagnostics all look good:
 

@@ -1,5 +1,5 @@
 ---
-title: "Chapter 2: fitting a single variant model in Stan"
+title: "Chapter 2: fitting a single strain model in Stan"
 output: 
   html_document:
     keep_md: true
@@ -338,7 +338,7 @@ RK_plot
 
 **Q7: Which method is fastest? By how much?**
 
-**A7: the Euler method is ~8 x faster**
+**A7: the Euler method is ~5 x faster**
 
 **Q8: Which method recovers the true parameters with more accuracy?**
 

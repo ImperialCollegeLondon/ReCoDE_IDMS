@@ -1,5 +1,5 @@
 ---
-title: "Chapter 2: fitting a single variant model in Stan"
+title: "Chapter 2: fitting a single strain model in Stan"
 output: 
   html_document:
     keep_md: true
@@ -253,7 +253,7 @@ stan_fit_EU = run_stan_models(
 ```
 
 ```
-## Time difference of 31.07438 secs
+## Time difference of 38.77071 secs
 ```
 
 
@@ -362,7 +362,7 @@ stan_fit_RK = run_stan_models(
 ```
 
 ```
-## Time difference of 2.517071 mins
+## Time difference of 3.4032 mins
 ```
 
 **Diagnostics still look good.**
@@ -421,7 +421,7 @@ RK_plot
 
 **Q7: Which method is fastest? By how much?**
 
-**A7: the Euler method is ~8 x faster**
+**A7: the Euler method is ~5 x faster**
 
 **Q8: Which method recovers the true parameters with more accuracy?**
 
@@ -497,7 +497,7 @@ stan_fit_EU2 = run_stan_models(
 ```
 
 ```
-## Time difference of 1.750497 mins
+## Time difference of 4.377979 mins
 ```
 
 **Reducing the time step by 6 or 7 should be sufficient, and is still faster than the RK method.**

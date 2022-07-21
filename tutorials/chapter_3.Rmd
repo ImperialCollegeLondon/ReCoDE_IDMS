@@ -1,5 +1,5 @@
 ---
-title: "Part 1"
+title: "Chapter 3:fitting a single strain model in Stan"
 output: 
   html_document:
     keep_md: true
@@ -50,6 +50,10 @@ In this chapter, we are going to fit a multivariate model to capture the dynamic
 The flow diagram of the multivariate model is shown in the following figure: 
 
 ![Flow diagram of compartmental model.](images/chapter_3_flow_diagram.jpg)
+
+
+
+
 
 
 
