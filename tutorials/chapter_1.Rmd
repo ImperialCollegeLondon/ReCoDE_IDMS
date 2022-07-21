@@ -137,7 +137,9 @@ Finally, $$S_{t0} = N - R_{t0} - I_{t0}$$
 
 # Step 6: What are the rate parameters which describe flows between the compartments?
 
-![](images/SEIQR comp model.png)
+
+![flow diagram]<img src="images/SEIQR comp model.png">
+
 
 Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is a probability. All individuals will progress to be infectious at an average rate of $\sigma$ and a proportion $\rho$ will be tested, reported and quarantined.
 
@@ -146,7 +148,8 @@ Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is
 
 # Step 7: What are the equations that govern the model?
 
-![](images/ODE equations.png)
+![ODE equations]<img src="images/ODE equations.png">
+
 
 Once you have a flow diagram with rates, writing the equations is simple! Arrows out of a state are subtracted, arrows into a stated are added. A good check is to make sure the equations balance. 
 
@@ -249,8 +252,8 @@ Some of the assumptions include:
 
 # The final model 
 
+![model 1]<img src="images/Omicron model 1 story board.png">
 
-![](images/Omicron model 1 story board.png)
 
 **Now we have designed our first infectious disease model, the next step is to code it up in Stan, which we will do in chapter 2. ** 
 

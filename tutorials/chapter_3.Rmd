@@ -49,7 +49,9 @@ In this chapter, we are going to fit a multivariate model to capture the dynamic
 
 The flow diagram of the multivariate model is shown in the following figure: 
 
-![Flow diagram of compartmental model.](images/chapter_3_flow_diagram.jpg)
+![Flow diagram of model 2]<img src="images/chapter_3_flow_diagram.jpg">
+
+
 
 
 
