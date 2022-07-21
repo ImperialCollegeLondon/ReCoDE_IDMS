@@ -1,4 +1,4 @@
--library(usethis)
+library(usethis)
 use_description(check_name = F,
                 roxygen = F,
                 fields = list(
