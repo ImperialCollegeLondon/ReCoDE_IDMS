@@ -47,7 +47,9 @@ In this chapter, we are going to fit a multivariate model to capture the dynamic
 
 The flow diagram of the multivariate model is shown in the following figure: 
 
-![Flow diagram of compartmental model.](images/chapter_3_flow_diagram.jpg)
+![Flow diagram of model 2]<img src="images/chapter_3_flow_diagram.jpg">
+
+
 
 
 
@@ -278,7 +280,7 @@ stan_fit_m2_EU1 = run_stan_models(
 ```
 
 ```
-## Time difference of 18.01348 mins
+## Time difference of 26.36024 mins
 ```
 
 Stan is providing us with a series of warnings that the chains have not mixed and that our posterior distributions are unreliable. To investigate this further, run diagnostics on the model as before: 
@@ -448,7 +450,7 @@ stan_fit_m2_EU2 = run_stan_models(
 ```
 
 ```
-## Time difference of 15.4958 mins
+## Time difference of 11.77799 mins
 ```
 This time, we recieved no warnings and the diagnostics all look good:
 
