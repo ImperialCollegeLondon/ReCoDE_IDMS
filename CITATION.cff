@@ -1,0 +1,32 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Bayesian inference for SARS-CoV-2 transmission
+  modelling, using Stan
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: 'Bethan Naomi '
+    family-names: 'Cracknell Daniels '
+    email: bnc19@ic.ac.uk
+    affiliation: 'Imperial College London '
+    orcid: 'https://orcid.org/0000-0002-3707-5706'
+repository-code: >-
+  https://github.com/ImperialCollegeLondon/ReCoDE_IDMS
+abstract: >-
+  The aim of this exemplar is to demonstrate how to
+  design and fit a mathematical model of disease
+  transmission to real data, in order to estimate key
+  epidemiological parameters and inform public health
+  responses. Specifically, we will model the
+  emergence of the SARS-CoV-2 variant of concern
+  Omicron in Gauteng, South Africa. To fit the model,
+  we use Stan, a free, accessible and efficient
+  Bayesian inference software. Adopting a Bayesian
+  approach to model fitting allows us to account for
+  uncertainty, which is especially important when
+  modelling a new pathogen or variant.
