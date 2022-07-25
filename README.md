@@ -20,7 +20,7 @@ Beneficial:
 - [Bayesian workflow for disease transmission modeling in Stan](https://mc-stan.org/users/documentation/case-studies/boarding_school_case_study.html#2_using_simulated_data_to_understand_our_model)
 - [A students guide to Bayesian statistics is accompanied by a lecture course on youtube](https://www.youtube.com/playlist?list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG)
 - [A brief introduction to Stan](https://www.alexpghayes.com/post/2018-12-24_some-things-ive-learned-about-stan/)
-- [The Stan mannual](https://mc-stan.org/)
+- [The Stan manual](https://mc-stan.org/)
 - [Statistical Rethinking](https://github.com/rmcelreath/stat_rethinking_2022) - this a thorough course on Bayesian data analysis which uses Stan. The course consists of lectures, homework and can be completed alongside reading the textbook of the same title
 
 ## Intended learning outcomes 
@@ -79,11 +79,11 @@ This folder contains all the functions needed to run the Rmd file. As stated abo
 
 - *run_stan_models.R*: Function to fit a stan model. Uses the function *draw_init_values.R*. At minimum, takes as in put a list of data to fit the model and a Stan model. Outputs a fitted stan model. 
 
-- *draw_init_values.R*: Functions sourced within *run_stan_models.R*  which generates a different starting values for each Markov chain. Takes as input a seed value and the number of varaints the model is fitting to. Outputs an initial value for each parameter and each chain. 
+- *draw_init_values.R*: Functions sourced within *run_stan_models.R*  which generates a different starting values for each Markov chain. Takes as input a seed value and the number of variants the model is fitting to. Outputs an initial value for each parameter and each chain. 
 
 - *diagnose_stan_fit.R*: a function to run diagnostics on a Stan fit. Takes as input a fitted  Stan model and the parameters to check. Outputs the number of divergent transitions, diagnostic plots and parameter summary statistics. 
 
-- *plot_model_fit.R*: a function to to plot the results of a fitted stan model against the data to which it was fit. Takes as input a fitted Stan model, the name of the variables to be plotted, and the simulated or observed data.
+- *plot_model_fit.R*: a function to plot the results of a fitted stan model against the data to which it was fit. Takes as input a fitted Stan model, the name of the variables to be plotted, and the simulated or observed data.
 
 - *compare_param_est.R*: a function to compare  parameter estimates between models or methods of solving ODEs, i.e., in order to check whether a Stan model is able to recover true parameter estimates from simulated data. Takes as input a vector of true parameter values, estimated posterior mean and 95% CrI from a Stan fit and parameter names. Outputs plots comparing parameter values.  
 
