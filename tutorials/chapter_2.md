@@ -253,7 +253,7 @@ stan_fit_EU = run_stan_models(
 ```
 
 ```
-## Time difference of 38.77071 secs
+## Time difference of 34.29217 secs
 ```
 
 
@@ -303,7 +303,7 @@ EU_diag
 
 The first output shows the bivariate marginal posterior distribution which will show divergent transitions in red, if there are any. Note also, the strong correlation between parameters. The next outputs show markov chain trace plots to check for model convergence and the univariate marginal posterior distribution by chain. 
 
-Finally, the function also returns a summary of the parameters we are interested in. This includes the mean and median, as well [Credible intervals](https://www.youtube.com/watch?v=wMfODgwqEr0&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=23) (CrI). Other useful statistics are given including the [effective sample size](INSERT LINK) and [Rhat](INSERT LINK).
+Finally, the function also returns a summary of the parameters we are interested in. This includes the mean and median, as well [Credible intervals](https://www.youtube.com/watch?v=wMfODgwqEr0&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=23) (CrI). Other useful statistics are given including the [effective sample size](https://mc-stan.org/docs/2_18/reference-manual/effective-sample-size-section.html) and [Rhat](https://mc-stan.org/rstan/reference/Rhat.html).
 
 
 #### Plotting the model fit 
@@ -362,7 +362,7 @@ stan_fit_RK = run_stan_models(
 ```
 
 ```
-## Time difference of 3.4032 mins
+## Time difference of 3.11367 mins
 ```
 
 **Diagnostics still look good.**
@@ -497,7 +497,7 @@ stan_fit_EU2 = run_stan_models(
 ```
 
 ```
-## Time difference of 4.377979 mins
+## Time difference of 2.018693 mins
 ```
 
 **Reducing the time step by 6 or 7 should be sufficient, and is still faster than the RK method.**
