@@ -2,7 +2,20 @@
 
 ### Author: Bethan Cracknell Daniels
 
+## Description
+
 The aim of this exemplar is to demonstrate how to design and fit a mathematical model of disease transmission to real data, in order to estimate key epidemiological parameters and inform public health responses. Specifically, we will model the emergence of the SARS-CoV-2 variant of concern Omicron in Gauteng, South Africa. To fit the model, we use Stan, a free, accessible and efficient Bayesian inference software. Adopting a Bayesian approach to model fitting allows us to account for uncertainty, which is especially important when modelling a new pathogen or variant. The transmission model uses compartments to track the populations movement between states, for instance from susceptible to infectious. By fitting a compartmental model to genomic and epidemiological surveillance data, we will recreate the transmission dynamics of Omicron and other circulating variants, and estimate key epidemiological parameters. Together these estimates are useful for guiding policy, especially in the early stages of an emerging variant or pathogen, when there are lots of unknowns.
+
+## Learning outcomes 
+
+Upon completion of this tutorial, students will be able to:
+
+1.  design an infectious disease compartmental model to answer public health questions. 
+2.  compare methods of solving ODE using Stan. 
+3.  write a Stan model to fit an infectious disease model.
+4.  interpret Stan model diagnostics and implement appropriate solutions. 
+5.  structure R code into files based on functionality. 
+6.  write tests in R to check code. 
 
 ## Prerequisites:
 
@@ -23,16 +36,6 @@ Beneficial:
 - [The Stan manual](https://mc-stan.org/)
 - [Statistical Rethinking](https://github.com/rmcelreath/stat_rethinking_2022) - this a thorough course on Bayesian data analysis which uses Stan. The course consists of lectures, homework and can be completed alongside reading the textbook of the same title
 
-## Intended learning outcomes 
-
-Upon completion of this tutorial, students will be able to:
-
-1.  design an infectious disease compartmental model to answer public health questions. 
-2.  compare methods of solving ODE using Stan. 
-3.  write a Stan model to fit an infectious disease model.
-4.  interpret Stan model diagnostics and implement appropriate solutions. 
-5.  structure R code into files based on functionality. 
-6.  write tests in R to check code. 
 
 ## Project structure 
 
