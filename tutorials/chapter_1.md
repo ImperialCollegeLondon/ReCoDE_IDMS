@@ -34,7 +34,9 @@ Some questions include:
 
 First, lets take a look at the storyboard below. It outlines some of the key steps when designing and building a model logically. 
 
-![Designing a compartmental model.](images/Generic modelling storyboard.png)
+![Designing a compartmental model.] 
+<img src="images/Generic modelling storyboard.png">
+
 
 Briefly, we need to define (1) our research question, (2) population and time period. Then we need to think about (3) how our model can reproduce the observed data. Are we modelling incidence or prevalence data?
 
@@ -44,10 +46,12 @@ I will assume you are familiar with compartmental models and so won't go into fu
 
 For instance, Imperial has a module on SIR modules on [Coursera](https://www.coursera.org/lecture/developing-the-sir-model/introduction-to-the-sir-model-FXISd?redirectTo=%2Flearn%2Fdeveloping-the-sir-model%3Faction%3Denroll). Or there are an abundance of videos on YouTube where people introduce SIR models, especially since COVID-19. [This](https://www.youtube.com/watch?v=Qrp40ck3WpI) is a nice intro! 
 
-Having designed the model, we need to (5) think about the initial conditions for each state. If an infectious agent is entirely new to a population, like SARS-CoV-2 was at the start of 2020, we would expect all of the population to be in the S compartment, with a few individuals in the infectious compartment: 
-$$S = N - I_0$$ 
+Having designed the model, we need to (5) think about the initial conditions for each state. If an infectious agent is entirely new to a population, like SARS-CoV-2 was at the start of 2020, we would expect all of the population to be in the S compartment at $time (t) = 0$, with a few individuals in the infectious compartment: 
+$$S_{t0} = N - I_{t0}$$ 
 
-If the in pathogen is not novel and there is prior immunity, then we might expect some of the population to be in the recovered compartment. Critically, the sum of all the compartments must equal the population size, $$S + I + R = N$$ 
+Where $I_{t0}$ is the initial number infectious and $N$ is the population size. 
+
+If the in pathogen is not novel and there is prior immunity, then we might expect some of the population to be in the recovered compartment. Critically, the sum of all the compartments must equal the population size $N$, $$S + I + R = N$$ 
 
 The flow between the compartments is governed by rates (6). In this example, we have the transmission rate, typically denoted $\beta$ and the recovery rate, $\gamma$. Note that because transmission depends on the number of infectious people we need to account for this. Hence, the force of infection (the per capita rate that susceptible individuals contract the infection) depends on he transmission rate and on the proportion of the population that is infectious:
 $$\lambda = \beta\frac{I}{N} $$
@@ -115,7 +119,7 @@ Starting with the SIR model, we want to account for the [incubation period](http
 
 
 **Q2: draw out a compartmental model which accounts for the above**
-
+**A2: see flow diagram figure below**
 
 # Step 5: What are the initial conditions? What do we want to estimate? What do we want to fix?
 
@@ -131,7 +135,10 @@ Finally, $$S_{t0} = N - R_{t0} - I_{t0}$$
 
 # Step 6: What are the rate parameters which describe flows between the compartments?
 
-![](images/SEIQR comp model.png)
+
+![flow diagram]<img src="images/SEIQR comp model.png">
+
+
 
 Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is a probability. All individuals will progress to be infectious at an average rate of $\sigma$ and a proportion $\rho$ will be tested, reported and quarantined.
 
@@ -140,7 +147,8 @@ Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is
 
 # Step 7: What are the equations that govern the model?
 
-![](images/ODE equations.png)
+![ODE equations]<img src="images/ODE equations.png">
+
 
 Once you have a flow diagram with rates, writing the equations is simple! Arrows out of a state are subtracted, arrows into a stated are added. A good check is to make sure the equations balance. 
 
@@ -154,6 +162,7 @@ Having fixed the generation time (i.e., $\sigma$ and $\gamma$), we are going to 
 
 **Q3: why would we want to estimate these parameters?**
 
+**Q3: We want to estimate $\beta$ as it is variant-specific and therefore unknown following the emergence of a new SARS-CoV-2 variant. Estimating $\beta$ allows us to calculate the $R_0$. We need to estimate $\rho$ as the true incidence of SARS-CoV-2 is unobserved, so the level of under-reporting is unknown. Moreover, reporting and detection of cases is dependent on the rate of population testing soit is spatiotemporally heterogeneous**
 
 # Step 10: Do we have any domain knowledge to inform the parameter priors?
 
@@ -267,8 +276,8 @@ Some of the assumptions include:
 
 # The final model 
 
+![model 1]<img src="images/Omicron model 1 story board.png">
 
-![](images/Omicron model 1 story board.png)
 
 **Now we have designed our first infectious disease model, the next step is to code it up in Stan, which we will do in chapter 2. ** 
 

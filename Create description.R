@@ -15,5 +15,6 @@ usethis::use_package("deSolve" , min_version = "1.2.8")
 usethis::use_package("dplyr", min_version = "1.0.6")
 usethis::use_package("ggplot2" , min_version = "3.3.6")
 usethis::use_package("rstan" , min_version = "2.21.5")
- 
+usethis::use_package("tidyr" , min_version = "1.1.3")
+
 usethis::use_package("R" , min_version = "4.0.4", "Depends")

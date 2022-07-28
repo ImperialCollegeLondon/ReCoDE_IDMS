@@ -1,5 +1,5 @@
 ---
-title: "Part 1"
+title: "Chapter 3:fitting a single strain model in Stan"
 output: 
   html_document:
     keep_md: true
@@ -49,7 +49,13 @@ In this chapter, we are going to fit a multivariate model to capture the dynamic
 
 The flow diagram of the multivariate model is shown in the following figure: 
 
-![Flow diagram of compartmental model.](images/chapter_3_flow_diagram.jpg)
+![Flow diagram of model 2]<img src="images/chapter_3_flow_diagram.jpg">
+
+
+
+
+
+
 
 
 
@@ -251,7 +257,9 @@ stan_fit_m2_EU1 = run_stan_models(
     ), 
   model = m2_EU1,
   n_var = 2,
-  model_no = 2
+  model_no = 2,
+  n_iter = 400,
+  n_warmup = 200
 )
 ``` 
 
@@ -402,6 +410,8 @@ The model is broadly able to capture all the parameter values. As the is strong 
 
 # Model extensions 
 
+Note, these extensions don't have solutions, and there isn't a single, correct way to approach them. The challanges are more open ended and are provided in case you would like to explore this topic further! 
+
 ## 1. Parameter values, priors and likelihoods 
 
 As discussed throughout the tutorial, there are many choices to made during the model fitting process. These include which parameter values to fix and which to estimate, which priors to use and which likelihood to use. 
@@ -409,11 +419,11 @@ As discussed throughout the tutorial, there are many choices to made during the 
 ***Challenge: Refit the model Swap assuming the likelihood follows a Poisson distribution, rather than a Negative Binomial distribution*** 
 
 
-***Challenge: As discussed above, there is a some non-identifiability in the model. One way to address this is fix one of the parameter values. Refit the model fixing one or more of the parameter values. How does this change the parameter estimates? Alternatively, What happens if you try estimating more parameter values? For instance, try estimating the $\gamma$ and/or the $\sigma$ parameters. Does the model still converge? Are the estimated  parameter values less accurate?***
+***Challenge: As discussed above, there is a some non-identifiability in the model. One way to address this is fix one of the parameter values. Refit the model fixing one or more of the parameter values. How does this change the parameter estimates? Alternatively, What happens if you try estimating more parameter values? For instance, try estimating the*** $\gamma$ ***and/or the*** $\sigma$ ***parameters. Does the model still converge? Are the estimated  parameter values less accurate?***
+ 
 
 
-
-***Challenge: We have shown that our model can be sensitive to the choice of prior. We fit the model assuming improper, flat priors. Does the model still converge? Can you find a set of priors that result in divergent transitions? ** *
+***Challenge: We have shown that our model can be sensitive to the choice of prior. We fit the model assuming improper, flat priors. Does the model still converge? Can you find a set of priors that result in divergent transitions? ***
 
 ## 2. Missing data 
 

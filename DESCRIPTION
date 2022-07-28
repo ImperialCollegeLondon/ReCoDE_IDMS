@@ -10,11 +10,3 @@ Description: A project to fit a mathematical model of disease transmission
 License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
     license
 Encoding: UTF-8
-Imports: 
-    bayesplot (>= 1.8.1),
-    deSolve (>= 1.2.8),
-    dplyr (>= 1.0.6),
-    ggplot2 (>= 3.3.6),
-    rstan (>= 2.21.5)
-Depends: 
-    R (>= 4.0.4)
