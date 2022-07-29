@@ -112,9 +112,9 @@ This folder contains the compartmental models used in part 1.
 
 - *model2_Euler_V2.stan*: a Stan model of a multistrain SEIQRS model, the ODEs are solved using the Euler method at a user-defined time step. 
 
-### Testing:
+## Testing:
 
-The MD file testing introduces formal testing and the package *test that*. All *R.* files with the prefix *test* are scripts which run formal testing on a specific function. For instance, the file *test_simulate_data* contains the code to test the functions contained in the *simulate_data.R* file. 
+The MD file testing introduces formal testing and the package *test that*. All *R.* files with the prefix *test* are scripts which run formal testing on a specific function. 
 
 
 ### images, chapter_1_files, chapter_2_files, chapter_3_files:
