@@ -32,7 +32,6 @@ source("R/run_stan_models.R")
 source("R/diagnose_stan_fit.R")
 source("R/plot_model_fit.R")
 source("R/compare_param_est.R")
-source("R/tidy_data.R")
 
 # Models
 m1_EU = stan_model("models/model1_Euler_V1.stan")

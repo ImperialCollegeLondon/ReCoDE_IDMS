@@ -253,7 +253,7 @@ stan_fit_EU = run_stan_models(
 ```
 
 ```
-## Time difference of 34.29217 secs
+## Time difference of 37.17431 secs
 ```
 
 
@@ -362,7 +362,7 @@ stan_fit_RK = run_stan_models(
 ```
 
 ```
-## Time difference of 3.11367 mins
+## Time difference of 2.245508 mins
 ```
 
 **Diagnostics still look good.**
@@ -497,7 +497,7 @@ stan_fit_EU2 = run_stan_models(
 ```
 
 ```
-## Time difference of 2.018693 mins
+## Time difference of 1.521639 mins
 ```
 
 **Reducing the time step by 6 or 7 should be sufficient, and is still faster than the RK method.**

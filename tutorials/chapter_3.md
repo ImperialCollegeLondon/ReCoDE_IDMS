@@ -9,12 +9,11 @@ output:
 
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 
-```{r message=FALSE, warning=FALSE, label= "set-up"}
+
+
+```r
 library(dplyr)
 library(ggplot2)
 library(rstan)
@@ -35,7 +34,6 @@ source("R/compare_param_est.R")
 # Models
 m2_EU1 = stan_model("models/model2_Euler_V1.stan")
 m2_EU2 = stan_model("models/model2_Euler_V2.stan")
-
 ```
 
 
@@ -110,8 +108,8 @@ Note, this time we have two likelihood functions, one for each variant. As befor
 # Simulating multivariant data 
 
 Defining key dates: 
-```{r warning=FALSE, label= "define-dates"}
 
+```r
 # Date we start fitting the incidence to Delta 
 date_fit_D  =   as.Date.character("01-06-2021", format = "%d-%m-%Y")
  
@@ -132,14 +130,13 @@ end_date = as.Date.character("01-01-2022", format = "%d-%m-%Y")
 
 # All dates of modelling period
 all_dates_mv = seq.Date(from = date_seed_D, to = end_date ,  by = "days") # model times
- 
 ```
 
 
 As we are simulating data again, we need to define both the estimated and fixed parameters:
 
-```{r warning=FALSE, label= "parameter-values"}
 
+```r
 # Define  variables 
   n_pop = 15810388                     # Population
   immunity_mv = 0.19                   # Percentage of the population with immunity 
@@ -169,7 +166,8 @@ As we are simulating data again, we need to define both the estimated and fixed 
 Like the function *simulate_data_single_var* in chapter 2, *simulate_data_multi_var* takes as input our model parameters, starting values and time steps. This time we also need to tell the model when to start and end interventions and when to seed the Omicron variant. The model equations are defined in *models/model2_deSolve.R*. 
 
 
-```{r warning=FALSE, label= "simulate-data"}
+
+```r
 multi_var_sim_data = simulate_data_multi_var(
   immunity = immunity_mv, 
   n_inf_D = n_inf_D,
@@ -190,14 +188,14 @@ multi_var_sim_data = simulate_data_multi_var(
   time_int_end = which(all_dates_mv == date_int[2]),
   time_seed_O = which(all_dates_mv == date_seed_O)
 )
+```
 
-
-
-``` 
+![](chapter_3_files/figure-html/simulate-data-1.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-2.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-3.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-4.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-5.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-6.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-7.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-8.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-9.png)<!-- -->
 
 We can then plot the reported incidence with noise for the Delta and Omicron variants. 
 
-```{r warning=FALSE, label= "calculate-reported-incidence"}
+
+```r
 multi_var_sim_inc = calc_sim_incidence_multi_var(
                              ODE_data = multi_var_sim_data,
                              all_dates = all_dates_mv,
@@ -212,10 +210,12 @@ multi_var_sim_inc = calc_sim_incidence_multi_var(
 multi_var_sim_inc[[2]] # Plot 
 ```
 
+![](chapter_3_files/figure-html/calculate-reported-incidence-1.png)<!-- -->
+
 As we are assuming that incidence between July 2021 - October 2021 is Delta and that incidence between October 2021 and December 2021 is Omicron, all other data are "NA" which we need to discard: 
 
-```{r warning=FALSE, label= "remove-NA"}
 
+```r
 # Removing missing data 
  y_D = multi_var_sim_inc[[1]]$rep_inc_D_noise[!is.na(multi_var_sim_inc[[1]]$rep_inc_D_noise)]
  y_O = multi_var_sim_inc[[1]]$rep_inc_O_noise[!is.na(multi_var_sim_inc[[1]]$rep_inc_O_noise)]
@@ -228,8 +228,8 @@ The multivariate SEIQRS model using Euler's method is coded up in *model2_Euler_
 Once you are happy with the model, we can fit it to the data:
 
   
-```{r, label= "fit-EU1"}
 
+```r
 stan_fit_m2_EU1 = run_stan_models(
   list_data =
     list(
@@ -261,16 +261,79 @@ stan_fit_m2_EU1 = run_stan_models(
   n_iter = 400,
   n_warmup = 200
 )
-``` 
+```
+
+```
+## Warning: The largest R-hat is NA, indicating chains have not mixed.
+## Running the chains for more iterations may help. See
+## https://mc-stan.org/misc/warnings.html#r-hat
+```
+
+```
+## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+## Running the chains for more iterations may help. See
+## https://mc-stan.org/misc/warnings.html#bulk-ess
+```
+
+```
+## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+## Running the chains for more iterations may help. See
+## https://mc-stan.org/misc/warnings.html#tail-ess
+```
+
+```
+## Time difference of 8.191365 mins
+```
 
 Stan is providing us with a series of warnings that the chains have not mixed and that our posterior distributions are unreliable. To investigate this further, run diagnostics on the model as before: 
 
-```{r message=FALSE, warning=FALSE, label= "diagnose-EU1"}
+
+```r
 m2_EU1_diag = diagnose_stan_fit(
   stan_fit_m2_EU1, #
   pars = c("beta[1]", "rho[1]","rho[2]", "beta[2]", "R_0[1]", "R_0[2]", "epsilon", "omega"))
+```
 
+![](chapter_3_files/figure-html/diagnose-EU1-1.png)<!-- -->
+
+```r
 m2_EU1_diag
+```
+
+```
+## $`markov chain trace plots`
+```
+
+![](chapter_3_files/figure-html/diagnose-EU1-2.png)<!-- -->
+
+```
+## 
+## $`univariate marginal posterior distributions`
+```
+
+![](chapter_3_files/figure-html/diagnose-EU1-3.png)<!-- -->
+
+```
+## 
+## $`summary statistics of parameters`
+##                 mean     se_mean          sd        2.5%         25%
+## beta[1]  2.174278594 0.032742915 0.086212251 2.076230820 2.126329648
+## rho[1]   0.201609983 0.012991698 0.030939623 0.167216827 0.184687568
+## rho[2]   0.126246817 0.003388824 0.014708580 0.103874931 0.116838378
+## beta[2]  3.971081625 1.781548465 2.210453651 2.271054659 2.402496851
+## R_0[1]   5.026515710 0.010703291 0.027965750 4.957186757 5.017956338
+## R_0[2]  14.417304447 6.391065805 7.932560673 8.433757470 8.816767533
+## epsilon  0.005681398 0.001027253 0.001328556 0.004372203 0.004714769
+## omega    0.686398775 0.043428414 0.058106890 0.620262206 0.645499375
+##                 50%          75%        97.5%     n_eff     Rhat
+## beta[1] 2.150393516  2.187886913  2.404599547  6.932714 1.195066
+## rho[1]  0.192530698  0.205612432  0.285419766  5.671503 1.235327
+## rho[2]  0.123385478  0.132640129  0.163287402 18.838378 1.102571
+## beta[2] 2.491639868  6.536477611  8.006769192  1.539457 6.311293
+## R_0[1]  5.031984652  5.042884379  5.058545954  6.826817 1.173300
+## R_0[2]  9.071625754 23.593396160 28.833707087  1.540566 6.206673
+## epsilon 0.004959327  0.007003534  0.008489794  1.672649 3.119356
+## omega   0.660125727  0.732646287  0.815256899  1.790224 2.430118
 ```
 
 The warnings and diagnostic plots all show the model has failed to converge. Looking at the trace plot, it seems the model is converging on the parameters specific to Delta. Conversely, for the parameters relating to Omicron, the model is exploring two different regions of the posterior distribution. 
@@ -286,42 +349,19 @@ If a model is non-identifiable it means that two values of a parameter are equal
 
 If we plot the model fit against the data, we can see that the model is able to recreate the Delta incidence but only partly captures the Omicron transmission dynamics: 
 
-```{r echo=TRUE, message=FALSE, warning=FALSE, label= "plot-EU1"}
+
+```r
 plot_model_fit_multi_var(
   stan_fit_m2_EU1,
   variable_model = "lambda_days",
   variable_data = "rep_inc_D_noise",
   data = multi_var_sim_inc[[1]])
 ```
+
+![](chapter_3_files/figure-html/plot-EU1-1.png)<!-- -->
 To explore this further, we can even plot the model fit for each chain separately. This allows us to confirm that the chains with a high log posterior are indeed exploring parameter values that are able to capture the transmission dynamics:
 
-```{r warning=FALSE, include=FALSE, label="chain-diagnostics"}
 
-# extract the posterior distributions by chain 
-extract_chains = rstan::extract(stan_fit_m2_EU1, permuted = FALSE, inc_warmup = FALSE, pars = "lambda_days")
-
-# for each chain 
-for(i in 1:3){
-print(extract_chains[,i,] %>%  
-  as.data.frame() %>% 
-  summarise_all(~ mean(.)) %>%  # take the mean across all iterations 
-  mutate(model = "model") %>%  
-  pivot_longer(!model) %>%  
-  separate(col = name, into = c("time", "variant"), sep = ",") %>% 
-  pivot_wider(values_from = value, names_from = variant) %>% 
-  rename("Delta_model"= `1]` , "Omicrion_model"=`2]`) %>%  
-  bind_cols(Omicron_inc = multi_var_sim_inc[[1]]$rep_inc_O_noise,
-            Delta_inc = multi_var_sim_inc[[1]]$rep_inc_D_noise,
-            Date = multi_var_sim_inc[[1]]$date) %>%  
-  ggplot(aes(x =Date, y = Omicron_inc))+
-  geom_point()+
-  geom_line(aes(y=Omicrion_model)) + 
-  geom_point(aes(y = Delta_inc), color = "red")+
-  geom_line(aes(y = Delta_model), color = "red")
-)
-}
-  
-```
 
 
 As expected, chains 1 and 2 are able to capture the transmission dynamics of Omicron, whilst chain 3 peaks too early. This makes sense, given that this chain was exploring much higher values of the Omicron $R_0$.
@@ -336,16 +376,23 @@ Alternatively, we can take failure to converge as a sign that our model needs im
 
 For $\epsilon$, the rate that immunity wanes against Omicron, the model is exploring two models. The first is ~0.005 and the second is ~0.0075, corresponding to immunity last on average for 200 days and 130 days respectively. Based on the diagnostics we ran, we know that an average duration of immunity around 200 days is more likely. We originally assumed $\epsilon \sim ND(0.003,0.001)$: 
 
-```{r warning=FALSE, label = "epsilon-prior"}
+
+```r
 eps_prior = rnorm(100000, 0.003,0.001)
 quantile(eps_prior, probs=c(0.025,0.25,0.5,0.75,0.975))
+```
+
+```
+##        2.5%         25%         50%         75%       97.5% 
+## 0.001030631 0.002324570 0.003002029 0.003671811 0.004967465
 ```
 In isolation, this prior supports parameter values between 0.001-0.005, or immunity lasting 250-1000 days, and yet in our model the sampler is stuck in a local mode exploring values of immunity <150 days. Clearly, our prior is not regularising our model in the way that we had hoped. Lets try relaxing the prior on $\epsilon$ to see if that helps: $\epsilon \sim Exponential(5)$. 
 
 
 *model2_Euler_V2.stan* is exactly the same as *model2_Euler_V1.stan* but with the updated prio. We will also increase the frequency with which we solve the ODEs from 6 times per day to 10 times per day, to improve accuracy. 
 
-```{r, label= "fit-EU2"}
+
+```r
 stan_fit_m2_EU2 = run_stan_models(
   list_data =
     list(
@@ -375,18 +422,64 @@ stan_fit_m2_EU2 = run_stan_models(
   n_var = 2,
   model_no = 2
 )
-``` 
+```
+
+```
+## Time difference of 19.98115 mins
+```
 This time, we received no warnings and the diagnostics all look good:
-```{r warning=FALSE, label= "diagnose-EU2"}
+
+```r
 m2_EU2_diag = diagnose_stan_fit(
   stan_fit_m2_EU2, #
    pars = c("beta[1]", "beta[2]", "rho[1]","rho[2]",  "R_0[1]", "R_0[2]",  "omega", "epsilon"))
+```
 
+![](chapter_3_files/figure-html/diagnose-EU2-1.png)<!-- -->
+
+```r
 m2_EU2_diag
 ```
 
+```
+## $`markov chain trace plots`
+```
+
+![](chapter_3_files/figure-html/diagnose-EU2-2.png)<!-- -->
+
+```
+## 
+## $`univariate marginal posterior distributions`
+```
+
+![](chapter_3_files/figure-html/diagnose-EU2-3.png)<!-- -->
+
+```
+## 
+## $`summary statistics of parameters`
+##                mean      se_mean           sd        2.5%         25%
+## beta[1] 2.116521884 9.899071e-04 0.0269706926 2.067661028 2.097787454
+## beta[2] 2.319350471 5.139249e-03 0.1024861769 2.131684601 2.248085267
+## rho[1]  0.188317783 3.325335e-04 0.0092349010 0.171366430 0.181847303
+## rho[2]  0.115291630 4.347656e-04 0.0090079647 0.099126602 0.108939300
+## R_0[1]  4.981323338 4.041932e-04 0.0119813757 4.957105925 4.973470936
+## R_0[2]  8.553193796 1.482954e-02 0.3023531775 7.980951894 8.344190297
+## omega   0.644320641 5.484722e-04 0.0168800694 0.610813948 0.633733466
+## epsilon 0.005078499 1.653904e-05 0.0003368983 0.004422272 0.004848714
+##                 50%         75%       97.5%    n_eff      Rhat
+## beta[1] 2.116432248 2.133809321 2.175968276 742.3272 1.0010011
+## beta[2] 2.320265733 2.385751498 2.542435142 397.6778 1.0132085
+## rho[1]  0.188335445 0.194204472 0.207661324 771.2475 1.0012060
+## rho[2]  0.115026089 0.121291680 0.134161125 429.2824 1.0127609
+## R_0[1]  4.981861544 4.989864744 5.003023951 878.6892 0.9997183
+## R_0[2]  8.557859890 8.747650458 9.194714836 415.6939 1.0123018
+## omega   0.644341053 0.655534903 0.677306322 947.1947 0.9991738
+## epsilon 0.005053239 0.005293894 0.005769865 414.9321 1.0125417
+```
+
 The model fit is also good:
-```{r echo=TRUE, message=FALSE, warning=FALSE, label= "plot-EU2"}
+
+```r
 plot_model_fit_multi_var(
   stan_fit_m2_EU2,
   variable_model = "lambda_days",
@@ -394,9 +487,12 @@ plot_model_fit_multi_var(
   data = multi_var_sim_inc[[1]])
 ```
 
+![](chapter_3_files/figure-html/plot-EU2-1.png)<!-- -->
+
 
 Finally, we can compare the parameter estimates to the true values: 
-```{r message=FALSE,  warning=FALSE, label= "compare-param"}
+
+```r
 compare_param_est(
   parameter_names = c("beta[1]", "beta[2]", "rho[1]","rho[2]",  "R_0[1]", "R_0[2]",  "omega", "epsilon"),
   true_param_values = c(beta_D, beta_O, rho_D, rho_O , R0_D, R0_O, omega, epsilon),
@@ -404,6 +500,61 @@ compare_param_est(
   model_names = c("EU")
 )
 ```
+
+```
+## [[1]]
+```
+
+![](chapter_3_files/figure-html/compare-param-1.png)<!-- -->
+
+```
+## 
+## [[2]]
+```
+
+![](chapter_3_files/figure-html/compare-param-2.png)<!-- -->
+
+```
+## 
+## [[3]]
+```
+
+![](chapter_3_files/figure-html/compare-param-3.png)<!-- -->
+
+```
+## 
+## [[4]]
+```
+
+![](chapter_3_files/figure-html/compare-param-4.png)<!-- -->
+
+```
+## 
+## [[5]]
+```
+
+![](chapter_3_files/figure-html/compare-param-5.png)<!-- -->
+
+```
+## 
+## [[6]]
+```
+
+![](chapter_3_files/figure-html/compare-param-6.png)<!-- -->
+
+```
+## 
+## [[7]]
+```
+
+![](chapter_3_files/figure-html/compare-param-7.png)<!-- -->
+
+```
+## 
+## [[8]]
+```
+
+![](chapter_3_files/figure-html/compare-param-8.png)<!-- -->
 
 The model is broadly able to capture all the parameter values. As the is strong correlation between the parameters values, we might say they are weakly identified, as the posterior distribution mode is a ridge (see the pairs plot). Nevertheless, with sensible priors we are still able to capture the parameter values and obtain a sufficient sample size (see n_eff), indicating that results are unbiased and can be trusted. 
 
@@ -434,25 +585,17 @@ Where $y_Y$ is the variant specific reported incidence, $y_{tot}$ is the total r
 
 A limitation of genomic surveillance, is that it is often spatiotemporally sparse. Even for SARS-CoV-2, which has had more thorough surveillance than most other infectious diseases, there may be months for which now genomic surveillance was done. For instance, say that no genomic surveillance was undertaken in Gauteng for 1 weeks in June and October respectively. Therefore, for those time period we would have missing data for the variant-specific incidence of Delta and Omicron:     
 
-```{r include=FALSE, label = "calc-missing-data"}
-multi_var_sim_inc_missing_data = multi_var_sim_inc[[1]]
-
-multi_var_sim_inc_missing_data$rep_inc_D_noise = 
-  ifelse(multi_var_sim_inc_missing_data$date >=  as.Date.character("2021-06-14", format = "%Y-%m-%d")  & multi_var_sim_inc_missing_data$date  <= as.Date.character("2021-06-30",format = "%Y-%m-%d") | multi_var_sim_inc_missing_data$date >=  as.Date.character("2021-10-21", format = "%Y-%m-%d")  & multi_var_sim_inc_missing_data$date  <= as.Date.character("2021-10-30",format = "%Y-%m-%d"), NA,
-         multi_var_sim_inc_missing_data$rep_inc_D_noise)
-
-multi_var_sim_inc_missing_data$rep_inc_O_noise = 
-  ifelse(multi_var_sim_inc_missing_data$date >=  as.Date.character("2021-06-14", format = "%Y-%m-%d")  & multi_var_sim_inc_missing_data$date  <= as.Date.character("2021-06-30",format = "%Y-%m-%d") | multi_var_sim_inc_missing_data$date >=  as.Date.character("2021-10-21", format = "%Y-%m-%d")  & multi_var_sim_inc_missing_data$date  <= as.Date.character("2021-10-30",format = "%Y-%m-%d"), NA,
-         multi_var_sim_inc_missing_data$rep_inc_O_noise)
-
-```
 
 
-```{r warning=FALSE, label = "plot-missing-data"}
+
+
+```r
 ggplot(multi_var_sim_inc_missing_data, aes(x = date,y = rep_inc_D_noise)) +
   geom_line() +
   geom_line(aes(y= rep_inc_O_noise), color = "red")
 ```
+
+![](chapter_3_files/figure-html/plot-missing-data-1.png)<!-- -->
 
 
 Whereas in R, we can account for missing data as "NA", in Stan missing data cannot be included. Therefore, if we want to fit the model to incidence data where date for certain dates are missing, we need to include an array where we index the dates to be fit. This is similar to seeding the model 1 month prior to fitting, we passed an index to the Stan model telling it at which time point to start fitting the model. 
