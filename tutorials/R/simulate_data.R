@@ -38,7 +38,7 @@ simulate_data_single_var = function(
   if(immunity < 0 | immunity > 1) stop("immunity should be between 0 and 1")
   if(rho < 0 | rho > 1) stop("Rho should be between 0 and 1")
   if(n_inf < 0) stop("n_inf cannot be negative")
-  if(gamma < 0) stop("gamma cnanot be negative")
+  if(gamma < 0) stop("gamma cannot be negative")
   if(sigma < 0) stop("sigma cannot be negative")
   if(beta < 0) stop("beta cannot be negative")  
   if(length(ts) < 2) stop("must be at least two time steps")
