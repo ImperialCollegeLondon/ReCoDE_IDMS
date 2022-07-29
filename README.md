@@ -121,4 +121,27 @@ The MD file testing introduces formal testing and the package *test that*. All *
 
 These files contains figures used in the RMD as learning resources, and can largely be ignored. 
 
+### Try the code with Docker container:
+
+If you have Docker engine installed on your computer, please set Docker engine to use at least 6GB RAM, 4GB Swap, and 4 CPUs.
+
+Pull the container image in a command window (Windows) or a terminal window (Mac or Linux) by running 
+
+`docker pull jianlianggao/recode_idms:20220726`
+
+
+When the image is pulled, to run the image in a container instance, please run the following command
+
+`docker run --rm -p 127.0.0.1:8787:8787 -e DISABLE_AUTH=true jianlianggao/recode_idms:20220726`
+
+Let the above command run in the terminal window and keep it open in the background, you can open `127.0.0.1:8787:8787` in your favourite web brower and you will have a RStudio (it is officially called `posit` now) interface to open and run tutorial code of chapter 1, chapter 2 or chapter 3 in R Markdown.  
+You can modify the code in R Markdown but you do not have permissions to save the file. If you want to save changes you have made, please stop the container instance in the terminal window by pressing `Control + C`. Then start a new container instance by running
+
+`docker run --rm -p 127.0.0.1:8787:8787 -v /tmp:/home/rstudio/data -e DISABLE_AUTH=true jianlianggao/recode_idms:20220703`
+
+Again, please keep the command window (or terminal window) opened in the background.
+View RStudio from your favourite web browser by visiting 127.0.0.1:8787 and now you should be able to save changes in the /home/rstudio/data folder, which is mapping to `/tmp` in your computer. You can copy the save files to other folder later on.
+
+For Windows users, the mount path format `/tmp` is different, you may need to replace it with `d:/tmp` for example. This has been tested yet. We will update when we have a chance to test it on a Windows computer.
+In RStudio in your web browser, please run config.R before running any other code.
 
