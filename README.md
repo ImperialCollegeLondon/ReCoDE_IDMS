@@ -66,11 +66,11 @@ This chapter will fit a single-variant compartmental model to simulated data in 
  
 ### Chapter 3
  
-This chapter builds on everything introduced in chapter 2 in order to fit a more complicated model. Specifically, chapter 3 shows how to fit a multi-variant compartmental model to simulated data in order to explore the transmission dynamics of omicron and delta in Gauteng. The model accounts for population testing, vaccination and waning immunity. 
+This chapter builds on everything introduced in chapter 2 in order to fit a more complicated model. Specifically, chapter 3 shows how to fit a multistain compartmental model to simulated data in order to explore the transmission dynamics of omicron and delta in Gauteng. The model accounts for population testing, vaccination and waning immunity. Chapter 3 also includes some optional, open ended challenges. 
  
 ## Repository structure 
 
-Each RMD file takes as in input multiple functions, each with a specific purpose. Frequently, these functions take as input the output of the function before. The functions are all contained in the folder *R*. There is also a *models* folder, which contains all compartmental models used in chapters 2 and 3. 
+Each RMD file takes as in input multiple functions, each with a specific purpose. Frequently, these functions take as input the output of the function before. The functions are all contained in the folder *R*. There is also a *models* folder, which contains all compartmental models used in chapters 2 and 3. All *.R* files containing the prefix test are used to conduct unit testing.
 
 ### R:
 
@@ -86,7 +86,7 @@ This folder contains all the functions needed to run the Rmd file. As stated abo
 
 - *diagnose_stan_fit.R*: a function to run diagnostics on a Stan fit. Takes as input a fitted  Stan model and the parameters to check. Outputs the number of divergent transitions, diagnostic plots and parameter summary statistics. 
 
-- *plot_model_fit.R*: a function to plot the results of a fitted stan model against the data to which it was fit. Takes as input a fitted Stan model, the name of the variables to be plotted, and the simulated or observed data.
+- *plot_model_fit.R*: a function to plot the results of a fitted Stan model against the data to which it was fit. Takes as input a fitted Stan model, the name of the variables to be plotted, and the simulated or observed data.
 
 - *compare_param_est.R*: a function to compare  parameter estimates between models or methods of solving ODEs, i.e., in order to check whether a Stan model is able to recover true parameter estimates from simulated data. Takes as input a vector of true parameter values, estimated posterior mean and 95% CrI from a Stan fit and parameter names. Outputs plots comparing parameter values.  
 
@@ -96,22 +96,29 @@ This folder contains the compartmental models used in part 1.
 
 **R models:**
 
-- *model1_deSolve.R*: a function to solve SEIQR model which is sourced by the function *simulate_data.R*. 
+- *model1_deSolve.R*: a function to solve a single strain SEIQR model which is sourced by the function *simulate_data.R*.
+
+- *model2_deSolve.R*: a function to solve a multistrain SEIQRS model which is sourced by the function *simulate_data.R*. 
 
 **Stan models (written in C++):**
 
-- *model1_Euler_V1.stan*: a Stan model which solves the ODEs using the Euler method at a single day step. 
+- *model1_Euler_V1.stan*: a Stan model of a single strain SEIQR model, the ODEs are solved using the Euler method at a single day step. 
 
-- *model1_Euler_V2.stan*: a Stan model which solves the ODEs using the Euler method at a used defined time step. 
+- *model1_Euler_V2.stan*: a Stan model of a single strain SEIQR model, the ODEs are solved using the Euler method at a user-defined time step.  
 
-- *model1_Euler_V3.stan* and *model1_Euler_V4.stan* are modified versions of *model1_Euler_V2.stan*.
+- *model1_RK_V1.stan*: a Stan model of a single strain SEIQR model, the ODEs are solved using the Runge-Kutta Method. 
 
-- *model1_RK_V1.stan*: a Stan model which solves the ODEs using the Runge-Kutta Method. 
+- *model2_Euler_V1.stan*: a Stan model of a multistrain SEIQRS model, the ODEs are solved using the Euler method at a user-defined time step. 
+
+- *model2_Euler_V2.stan*: a Stan model of a multistrain SEIQRS model, the ODEs are solved using the Euler method at a user-defined time step. 
+
+### Testing:
+
+The MD file testing introduces formal testing and the package *test that*. All *R.* files with the prefix *test* are scripts which run formal testing on a specific function. For instance, the file *test_simulate_data* contains the code to test the functions contained in the *simulate_data.R* file. 
 
 
-### images:
+### images, chapter_1_files, chapter_2_files, chapter_3_files:
 
-
-This file contains figures used in the RMD as learning resources, and can largely be ignored. 
+These files contains figures used in the RMD as learning resources, and can largely be ignored. 
 
 
