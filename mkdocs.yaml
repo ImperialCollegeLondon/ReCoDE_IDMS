@@ -1,0 +1,73 @@
+site_name: Bayesian inference for SARS-CoV-2 transmission modelling, using Stan
+
+# Steps to follow on GitHub to publish your mkdocs site:
+# 1. Create a new branch called gh-pages
+# 2. Ensure GitHub Pages is enabled for your repository, Settings>Pages> Enable.
+#    Make sure that Source is set to `gh-pages` and `/(root)`. Save this setting.
+# 3. Ensure that on GitHub workflows have read and write access to your repository
+#    Settings>Actions>General>Workflow permissions, tick `Read and write permissions`
+#    and save this setting.
+# Change this to the name of your repo
+repo_url: https://github.com/ImperialCollegeLondon/ReCoDE_IDMS
+edit_uri: tree/main/docs/
+
+theme:
+  name: material
+  custom_dir: docs
+
+  icon:
+    logo: logos/iclogo
+  favicon: assets/iclogo.png
+  font:
+    text: Roboto
+    code: Roboto Mono
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+
+  # SPA behaviour
+  features:
+    - navigation.instant
+    - navigation.top
+    - toc.follow
+    - content.code.annotate
+
+nav:
+  - "index.md"
+  - Chapter 1: "chapter_1.md" 
+  - Chapter 2: "chapter_2.md" 
+  - Chapter 3: "chapter_3.md" 
+  - Testing: "Testing.md" 
+
+# Add here all the plugins you want to use.
+# Don't forget to add them in requirements.txt as well.
+plugins:
+  - tags
+  - search
+  - include-markdown # https://github.com/mondeja/mkdocs-include-markdown-plugin
+
+# Set settings for markdown extensions
+markdown_extensions:
+  - meta
+  - mdx_math:
+      enable_dollar_delimiter: True
+  - pymdownx.highlight:
+      anchor_linenums: false
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.details
+  - pymdownx.smartsymbols
+
+# Render math in mkdocs
+extra_javascript:
+  - https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML
