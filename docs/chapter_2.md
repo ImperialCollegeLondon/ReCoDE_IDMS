@@ -41,7 +41,7 @@ m1_EU2 = stan_model("models/model1_Euler_V2.stan")
 
 
 
-# Simulating data 
+## Simulating data 
 
 In this project, we are going to use simulated data. This is useful to check we have no bugs in our code. Also, even though Stan has lots of helpful diagnostics, we can never be completely certain our sampling algorithm has converged on the true posterior distribution. The diagnostics only confirm when it definitely hasn't. Therefore, using simulated data lets us check that the model can recover known posterior estimates, which gives us more confidence when it comes to fitting to observed data. 
 
@@ -93,7 +93,7 @@ sim_data = simulate_data_single_var (
 )
 ```
 
-![](chapter_2_files/figure-html/simulate-data-1.png)<!-- -->![](chapter_2_files/figure-html/simulate-data-2.png)<!-- -->![](chapter_2_files/figure-html/simulate-data-3.png)<!-- -->![](chapter_2_files/figure-html/simulate-data-4.png)<!-- -->![](chapter_2_files/figure-html/simulate-data-5.png)<!-- -->
+![](assets/chapter_2_files/figure-html/simulate-data-1.png)<!-- -->![](assets/chapter_2_files/figure-html/simulate-data-2.png)<!-- -->![](assets/chapter_2_files/figure-html/simulate-data-3.png)<!-- -->![](assets/chapter_2_files/figure-html/simulate-data-4.png)<!-- -->![](assets/chapter_2_files/figure-html/simulate-data-5.png)<!-- -->
 
 ### Calculating reported incidence and adding noise to the data 
 
@@ -114,12 +114,12 @@ sim_inc = simulated_data[[1]]
 simulated_data[[2]] # plot of reported incidence with and without noise
 ```
 
-![](chapter_2_files/figure-html/calculate-reported-incidence-1.png)<!-- -->
+![](assets/chapter_2_files/figure-html/calculate-reported-incidence-1.png)<!-- -->
 
 
 The reported incidence with noise is what we will fit the Stan models to. 
 
-# Model fitting 
+## Model fitting 
 
 
 If you aren't familiar with Stan I recommend taking a look at some of the extra materials suggested in the [README.md](https://github.com/bnc19/ReCoDE_IDMS). You should also watch [this](https://www.youtube.com/watch?v=YZZSYIx1-mw&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=72) and [this](https://www.youtube.com/watch?v=a-wydhEuAm0&list=PLwJRxp3blEvZ8AKMXOy0fc0cqT61GsKCG&index=69) for an introduction into coding a Stan model and the Hamiltonian Monte Carlo algorithm - the algorithm which will sample our posterior distribution. 
@@ -128,7 +128,7 @@ If you aren't familiar with Stan I recommend taking a look at some of the extra 
 If you are familiar with Stan then we can move to coding up the infectious disease model. The first thing to note is that there are two ways to solve our ODEs in Stan. 
 
 
-## Method 1: Euler's Method 
+### Method 1: Euler's Method 
 
 
 Euler's Method is the simplest numerical integration method. Consider an infectious disease model, where susceptible individuals are infected at rate $\beta \frac{I}{N}$ but never recover. 
@@ -198,7 +198,7 @@ This contains code to calculate any other quantities of interest, that are not n
 
 
 
-## <a id="RKM"></a> Method 2: Runge-Kutta Method
+### <a id="RKM"></a> Method 2: Runge-Kutta Method
 
 This second method builds on Euler's method, but rather than calculating a single rate of change at each time step, we calculate 4 different slopes. These slopes are then used as a weighted average to approximate the actual rate of change of states. Because we calculate multiple slopes at each interval, we obtain a more accurate approximation. For a more detailed visualisation of this method, see [here](https://www.haroldserrano.com/blog/visualizing-the-runge-kutta-method#:~:text=The%20Runge%2DKutta%20Method%20is,uses%20them%20as%20weighted%20averages).  
 
@@ -228,7 +228,7 @@ Running this function will fit our Stan model to the simulated data and return t
 
  
 
-## Fitting using the Euler method 
+### Fitting using the Euler method 
 
 First, we are going to fit the model using the Euler method: 
 
@@ -257,7 +257,7 @@ stan_fit_EU = run_stan_models(
 ```
 
 
-### Model diagnostics 
+#### Model diagnostics 
 
 If there are divergent transitions, Stan will warn us. Check out what divergent transitions are and why they can *never* be ignored [here](https://mc-stan.org/docs/2_29/reference-manual/divergent-transitions.html). Good news however, we obtained no immediate warnings about our model.
 To be on the safe side, lets check with some model diagnostics. *diagnose_stan_fit* takes our fitted Stan results and parameters of interest and returns diagnostics plots and a table of summary statistics. 
@@ -269,7 +269,7 @@ To be on the safe side, lets check with some model diagnostics. *diagnose_stan_f
 EU_diag = diagnose_stan_fit(stan_fit_EU, pars = c("beta", "rho", "R_0"))
 ```
 
-![](chapter_2_files/figure-html/diagnose-EU1-1.png)<!-- -->
+![](assets/chapter_2_files/figure-html/diagnose-EU1-1.png)<!-- -->
 
 ```r
 EU_diag
@@ -279,14 +279,14 @@ EU_diag
 ## $`markov chain trace plots`
 ```
 
-![](chapter_2_files/figure-html/diagnose-EU1-2.png)<!-- -->
+![](assets/chapter_2_files/figure-html/diagnose-EU1-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](chapter_2_files/figure-html/diagnose-EU1-3.png)<!-- -->
+![](assets/chapter_2_files/figure-html/diagnose-EU1-3.png)<!-- -->
 
 ```
 ## 
@@ -327,7 +327,7 @@ EU_plot = plot_model_fit(stan_fit_EU,
 EU_plot
 ```
 
-![](chapter_2_files/figure-html/plot_EU1-1.png)<!-- -->
+![](assets/chapter_2_files/figure-html/plot_EU1-1.png)<!-- -->
 
 The fit here is poor, as the model peaks too late. Next we will compare this to the the Runge-Kutta Method. 
 
@@ -371,7 +371,7 @@ stan_fit_RK = run_stan_models(
 RK_diag = diagnose_stan_fit(stan_fit_RK, pars = c("beta", "rho", "R_0"))
 ```
 
-![](chapter_2_files/figure-html/diagnose-RK1-1.png)<!-- -->
+![](assets/chapter_2_files/figure-html/diagnose-RK1-1.png)<!-- -->
 
 ```r
 RK_diag
@@ -381,14 +381,14 @@ RK_diag
 ## $`markov chain trace plots`
 ```
 
-![](chapter_2_files/figure-html/diagnose-RK1-2.png)<!-- -->
+![](assets/chapter_2_files/figure-html/diagnose-RK1-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](chapter_2_files/figure-html/diagnose-RK1-3.png)<!-- -->
+![](assets/chapter_2_files/figure-html/diagnose-RK1-3.png)<!-- -->
 
 ```
 ## 
@@ -415,7 +415,7 @@ RK_plot = plot_model_fit(stan_fit_RK,
 RK_plot
 ```
 
-![](chapter_2_files/figure-html/plot-RK1-1.png)<!-- -->
+![](assets/chapter_2_files/figure-html/plot-RK1-1.png)<!-- -->
 
 
 
@@ -441,28 +441,28 @@ compare_param_est(
 ## [[1]]
 ```
 
-![](chapter_2_files/figure-html/compare-param-1-1.png)<!-- -->
+![](assets/chapter_2_files/figure-html/compare-param-1-1.png)<!-- -->
 
 ```
 ## 
 ## [[2]]
 ```
 
-![](chapter_2_files/figure-html/compare-param-1-2.png)<!-- -->
+![](assets/chapter_2_files/figure-html/compare-param-1-2.png)<!-- -->
 
 ```
 ## 
 ## [[3]]
 ```
 
-![](chapter_2_files/figure-html/compare-param-1-3.png)<!-- -->
+![](assets/chapter_2_files/figure-html/compare-param-1-3.png)<!-- -->
 
 **It looks like the RK method is better able to recover the parameter values, which makes sense as it fits the date better. The RK method does underestimate the true $R_0$, which explains why the model was not quite able to capture the peak of the epidemic curve.** 
 
 **It is also important to remember that the data are generated using fixed parameter values, whereas in Bayesian modelling we consider parameters to be distributions. This highlights the limitations of using a single simulated data set, how do we decide if the posterior distribution is close enough to the "correct" value? Nevertheless, we can see that the parameter values and model fit estimated by the Euler method are subject to less accurate and subject to more uncertainty. One option we can explore is reducing the time step at which we solve the ODE equations using the Euler method.** 
 
 
-### Improving the accuracy of the Euler method 
+#### Improving the accuracy of the Euler method 
 
 **Q9: Reduce the time step at which *model1_Euler_V1.stan* solves the ODEs to improve the accuracy of the fit. What is the minimum reduction in step size needed to ensure the posterior distribution captures the true parameter value?** 
 
@@ -509,7 +509,7 @@ stan_fit_EU2 = run_stan_models(
 EU2_diag = diagnose_stan_fit(stan_fit_EU2, pars = c("beta", "rho", "R_0"))
 ```
 
-![](chapter_2_files/figure-html/diagnose-EU2-1.png)<!-- -->
+![](assets/chapter_2_files/figure-html/diagnose-EU2-1.png)<!-- -->
 
 ```r
 EU2_diag
@@ -519,14 +519,14 @@ EU2_diag
 ## $`markov chain trace plots`
 ```
 
-![](chapter_2_files/figure-html/diagnose-EU2-2.png)<!-- -->
+![](assets/chapter_2_files/figure-html/diagnose-EU2-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](chapter_2_files/figure-html/diagnose-EU2-3.png)<!-- -->
+![](assets/chapter_2_files/figure-html/diagnose-EU2-3.png)<!-- -->
 
 ```
 ## 
@@ -553,7 +553,7 @@ EU2_plot = plot_model_fit(stan_fit_EU2,
 EU2_plot
 ```
 
-![](chapter_2_files/figure-html/plot-EU2-1.png)<!-- -->
+![](assets/chapter_2_files/figure-html/plot-EU2-1.png)<!-- -->
 
 **Finally, lets compare parameter estimates again**
 
@@ -571,21 +571,21 @@ compare_param_est(
 ## [[1]]
 ```
 
-![](chapter_2_files/figure-html/compare-param-2-1.png)<!-- -->
+![](assets/chapter_2_files/figure-html/compare-param-2-1.png)<!-- -->
 
 ```
 ## 
 ## [[2]]
 ```
 
-![](chapter_2_files/figure-html/compare-param-2-2.png)<!-- -->
+![](assets/chapter_2_files/figure-html/compare-param-2-2.png)<!-- -->
 
 ```
 ## 
 ## [[3]]
 ```
 
-![](chapter_2_files/figure-html/compare-param-2-3.png)<!-- -->
+![](assets/chapter_2_files/figure-html/compare-param-2-3.png)<!-- -->
 
 **This final fit is able to recover our true parameters, although the model doesn't quite capture the peak. However, as the data incorporates additional noise, we would not expect the model to perfectly fit every point, otherwise we would be concerned about over-fitting the model.** 
 

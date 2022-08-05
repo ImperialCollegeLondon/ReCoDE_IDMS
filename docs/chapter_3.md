@@ -37,7 +37,7 @@ m2_EU2 = stan_model("models/model2_Euler_V2.stan")
 ```
 
 
-# A multivariant model 
+## A multivariant model 
 
 In this chapter, we are going to fit a multivariate model to capture the dynamics of both the Delta and Omicron VOC's in Gauteng. This means fitting to the incidence data observed during the third wave, driven by Delta, and the fourth wave, driven by Omicron. We will assume that between July 2021 - October 2021 the incidence data is Delta, whilst between October 2021 and December 2021 the incidence data is Omicron ^. As before, we will seed both variants 1 month before fitting to the data. That means we seed Delta in May and we seed Omicron in September. 
 
@@ -47,7 +47,7 @@ In this chapter, we are going to fit a multivariate model to capture the dynamic
 
 The flow diagram of the multivariate model is shown in the following figure: 
 
-![Flow diagram of model 2]<img src="images/chapter_3_flow_diagram.jpg">
+![Flow diagram of model 2](assets/images/chapter_3_flow_diagram.jpg)
 
 
 
@@ -59,11 +59,11 @@ The flow diagram of the multivariate model is shown in the following figure:
 
 Let subscript $Y$ refer to the virus variant ($D$ = Delta, $O$ = Omicron). Susceptible individuals ($S$ compartment) are infected at rate $\lambda_Y = \beta_Y \frac{I_{t0}} {S_{t0}}$. Following infection individuals are latent with the virus ($E$ compartments) for an average of c$\frac{1}{\sigma}$ days. After incubating the virus, a proportion $\rho_Y$ of individuals are detected, reported and enter isolation ($Q$ compartments). The remaining proportion become infectious ($I$ compartments) and contribute to the transmission of SARS-CoV-2. The infectious period lasts on average $\frac{1}{\gamma}$ days, and then individuals recover and test negative ($R$ compartment). Susceptible individuals are also vaccinated and enter the R compartment directly at rate $\nu$. Once recovered, immunity to the Omicron variant wanes at a rate of $\epsilon$ ($S_O$ compartment) and individuals are infected at a rate of $\lambda_O$. 
 
-#### Initial conditions 
+### Initial conditions 
 As before, we will assume a single infectious individual seeds both the Delta and Omicron variants. We need redefine the number of recovered individuals, as we are now looking prior to the third wave. A sero-suvery in Gauteng reported a seroprevalence of 19% in at the end of January 2021 [1], so we will assume that $R_{t0} = N * 0.19$ and $S_{t0} = N -R_{t0}$. We will assume that the $E$, $Q$ and $S_O$ compartments are all 0 at $t_0$. 
 
 
-#### Model parameters 
+### Model parameters 
 As before, we will fix $\sigma$ and $\gamma$ using estimates from the literature, but we will assume they are variant-specific. For Omicron these we assume an average latent period $\frac{1}{\sigma_D}$ of 3.03 days [2] and an average infectious period $\frac{1}{\gamma_D}$ of 4.17 days [3]. FOr Delta, we will assume an  average latent period $\frac{1}{\sigma_O}$ 4.3 days [4] and an infectious period an average infectious period $\frac{1}{\gamma_O}$ of 2.9 days [3].
 
 We are also going to fix the rate of vaccination, assuming a constant per capita rate of vaccination of $\nu = 0.001$. 
@@ -80,7 +80,7 @@ $$\beta' = \beta * (1-\omega)$$
 
 Finally, we are also going to estimate the over-dispersion parameter $\kappa$, introduced in the previous chapters. 
 
-#### Likelihood and priors 
+### Likelihood and priors 
 
 As before we are going to assume a beta prior for the reporting probabilities: $\rho_Y \sim Beta(2,8)$, a normal distribution prior for the transmission rates: $\beta_Y \sim ND(2.2,1)$ and an exponential distribution for the overdispersion parameter prior: $\kappa \sim exp(0.01)$.
 
@@ -98,14 +98,14 @@ $$ y_Y \sim NegBin(\mu_Y, \kappa) $$
 Note, this time we have two likelihood functions, one for each variant. As before, we reconstruct the reported incidence from the model$\mu_Y$ as the rate of entry into the Q compartment: $\mu_Y = \rho_Y \sigma_Y E_Y$. Including multiple likelihoods in Stan is easy, we just define them on separate lines and Stan will sum them automatically to calculate the overall model likelihood.
 
 
-#### Assumptions 
+### Assumptions 
 
 * No pre-symptomatic transmission.
 * All reported incidence is dichotomously assumed to be either the Delta or Omicron variants, with no over variants in circulation. 
 * All tested individuals isolate with 100% compliance.
 
 
-# Simulating multivariant data 
+## Simulating multivariant data 
 
 Defining key dates: 
 
@@ -190,7 +190,7 @@ multi_var_sim_data = simulate_data_multi_var(
 )
 ```
 
-![](chapter_3_files/figure-html/simulate-data-1.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-2.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-3.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-4.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-5.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-6.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-7.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-8.png)<!-- -->![](chapter_3_files/figure-html/simulate-data-9.png)<!-- -->
+![](assets/chapter_3_files/figure-html/simulate-data-1.png)<!-- -->![](assets/chapter_3_files/figure-html/simulate-data-2.png)<!-- -->![](assets/chapter_3_files/figure-html/simulate-data-3.png)<!-- -->![](assets/chapter_3_files/figure-html/simulate-data-4.png)<!-- -->![](assets/chapter_3_files/figure-html/simulate-data-5.png)<!-- -->![](assets/chapter_3_files/figure-html/simulate-data-6.png)<!-- -->![](assets/chapter_3_files/figure-html/simulate-data-7.png)<!-- -->![](assets/chapter_3_files/figure-html/simulate-data-8.png)<!-- -->![](assets/chapter_3_files/figure-html/simulate-data-9.png)<!-- -->
 
 We can then plot the reported incidence with noise for the Delta and Omicron variants. 
 
@@ -210,7 +210,7 @@ multi_var_sim_inc = calc_sim_incidence_multi_var(
 multi_var_sim_inc[[2]] # Plot 
 ```
 
-![](chapter_3_files/figure-html/calculate-reported-incidence-1.png)<!-- -->
+![](assets/chapter_3_files/figure-html/calculate-reported-incidence-1.png)<!-- -->
 
 As we are assuming that incidence between July 2021 - October 2021 is Delta and that incidence between October 2021 and December 2021 is Omicron, all other data are "NA" which we need to discard: 
 
@@ -221,7 +221,7 @@ As we are assuming that incidence between July 2021 - October 2021 is Delta and 
  y_O = multi_var_sim_inc[[1]]$rep_inc_O_noise[!is.na(multi_var_sim_inc[[1]]$rep_inc_O_noise)]
 ```
 
-# Fitting the multivariant model in Stan 
+## Fitting the multivariant model in Stan 
 
 The multivariate SEIQRS model using Euler's method is coded up in *model2_Euler_V1.stan*, in the *models* folder. Spend some time looking over the model to check everything is clear. The variables for storing the outputs of the E, I, Q compartments are now 2D matrices, where the rows are the each time step at which we solve the model and the columns are the variants. 
 
@@ -294,7 +294,7 @@ m2_EU1_diag = diagnose_stan_fit(
   pars = c("beta[1]", "rho[1]","rho[2]", "beta[2]", "R_0[1]", "R_0[2]", "epsilon", "omega"))
 ```
 
-![](chapter_3_files/figure-html/diagnose-EU1-1.png)<!-- -->
+![](assets/chapter_3_files/figure-html/diagnose-EU1-1.png)<!-- -->
 
 ```r
 m2_EU1_diag
@@ -304,14 +304,14 @@ m2_EU1_diag
 ## $`markov chain trace plots`
 ```
 
-![](chapter_3_files/figure-html/diagnose-EU1-2.png)<!-- -->
+![](assets/chapter_3_files/figure-html/diagnose-EU1-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](chapter_3_files/figure-html/diagnose-EU1-3.png)<!-- -->
+![](assets/chapter_3_files/figure-html/diagnose-EU1-3.png)<!-- -->
 
 ```
 ## 
@@ -358,7 +358,7 @@ plot_model_fit_multi_var(
   data = multi_var_sim_inc[[1]])
 ```
 
-![](chapter_3_files/figure-html/plot-EU1-1.png)<!-- -->
+![](assets/chapter_3_files/figure-html/plot-EU1-1.png)<!-- -->
 To explore this further, we can even plot the model fit for each chain separately. This allows us to confirm that the chains with a high log posterior are indeed exploring parameter values that are able to capture the transmission dynamics:
 
 
@@ -367,7 +367,7 @@ To explore this further, we can even plot the model fit for each chain separatel
 As expected, chains 1 and 2 are able to capture the transmission dynamics of Omicron, whilst chain 3 peaks too early. This makes sense, given that this chain was exploring much higher values of the Omicron $R_0$.
 
 
-# Improving the Stan model 
+## Improving the Stan model 
 
 From the above diagnostics we can see that the model is having problems converging. One option is to run the model for more iterations, e.g, 2000 iterations with the first 1000 discarded as burn in. In this instance, the model still fails to converge (you can test this if you like, it takes ~30 minutes to run). 
 
@@ -435,7 +435,7 @@ m2_EU2_diag = diagnose_stan_fit(
    pars = c("beta[1]", "beta[2]", "rho[1]","rho[2]",  "R_0[1]", "R_0[2]",  "omega", "epsilon"))
 ```
 
-![](chapter_3_files/figure-html/diagnose-EU2-1.png)<!-- -->
+![](assets/chapter_3_files/figure-html/diagnose-EU2-1.png)<!-- -->
 
 ```r
 m2_EU2_diag
@@ -445,14 +445,14 @@ m2_EU2_diag
 ## $`markov chain trace plots`
 ```
 
-![](chapter_3_files/figure-html/diagnose-EU2-2.png)<!-- -->
+![](assets/chapter_3_files/figure-html/diagnose-EU2-2.png)<!-- -->
 
 ```
 ## 
 ## $`univariate marginal posterior distributions`
 ```
 
-![](chapter_3_files/figure-html/diagnose-EU2-3.png)<!-- -->
+![](assets/chapter_3_files/figure-html/diagnose-EU2-3.png)<!-- -->
 
 ```
 ## 
@@ -487,7 +487,7 @@ plot_model_fit_multi_var(
   data = multi_var_sim_inc[[1]])
 ```
 
-![](chapter_3_files/figure-html/plot-EU2-1.png)<!-- -->
+![](assets/chapter_3_files/figure-html/plot-EU2-1.png)<!-- -->
 
 
 Finally, we can compare the parameter estimates to the true values: 
@@ -505,65 +505,65 @@ compare_param_est(
 ## [[1]]
 ```
 
-![](chapter_3_files/figure-html/compare-param-1.png)<!-- -->
+![](assets/chapter_3_files/figure-html/compare-param-1.png)<!-- -->
 
 ```
 ## 
 ## [[2]]
 ```
 
-![](chapter_3_files/figure-html/compare-param-2.png)<!-- -->
+![](assets/chapter_3_files/figure-html/compare-param-2.png)<!-- -->
 
 ```
 ## 
 ## [[3]]
 ```
 
-![](chapter_3_files/figure-html/compare-param-3.png)<!-- -->
+![](assets/chapter_3_files/figure-html/compare-param-3.png)<!-- -->
 
 ```
 ## 
 ## [[4]]
 ```
 
-![](chapter_3_files/figure-html/compare-param-4.png)<!-- -->
+![](assets/chapter_3_files/figure-html/compare-param-4.png)<!-- -->
 
 ```
 ## 
 ## [[5]]
 ```
 
-![](chapter_3_files/figure-html/compare-param-5.png)<!-- -->
+![](assets/chapter_3_files/figure-html/compare-param-5.png)<!-- -->
 
 ```
 ## 
 ## [[6]]
 ```
 
-![](chapter_3_files/figure-html/compare-param-6.png)<!-- -->
+![](assets/chapter_3_files/figure-html/compare-param-6.png)<!-- -->
 
 ```
 ## 
 ## [[7]]
 ```
 
-![](chapter_3_files/figure-html/compare-param-7.png)<!-- -->
+![](assets/chapter_3_files/figure-html/compare-param-7.png)<!-- -->
 
 ```
 ## 
 ## [[8]]
 ```
 
-![](chapter_3_files/figure-html/compare-param-8.png)<!-- -->
+![](assets/chapter_3_files/figure-html/compare-param-8.png)<!-- -->
 
 The model is broadly able to capture all the parameter values. As the is strong correlation between the parameters values, we might say they are weakly identified, as the posterior distribution mode is a ridge (see the pairs plot). Nevertheless, with sensible priors we are still able to capture the parameter values and obtain a sufficient sample size (see n_eff), indicating that results are unbiased and can be trusted. 
 
 
-# Model extensions 
+## Model extensions 
 
 Note, these extensions don't have solutions, and there isn't a single, correct way to approach them. The challanges are more open ended and are provided in case you would like to explore this topic further! 
 
-## 1. Parameter values, priors and likelihoods 
+### 1. Parameter values, priors and likelihoods 
 
 As discussed throughout the tutorial, there are many choices to made during the model fitting process. These include which parameter values to fix and which to estimate, which priors to use and which likelihood to use. 
 
@@ -576,7 +576,7 @@ As discussed throughout the tutorial, there are many choices to made during the 
 
 ***Challenge: We have shown that our model can be sensitive to the choice of prior. We fit the model assuming improper, flat priors. Does the model still converge? Can you find a set of priors that result in divergent transitions? ***
 
-## 2. Missing data 
+### 2. Missing data 
 
 A common problem in epidemiological modelling is missing data. We are frequently using secondary data, which was not collected for the purposes of our study. When modelling multivariate pathogens (e.g., SARS-CoV-2, Influenza, Dengue), we often do not know what variant or serotype someone was infected with, as this is not routinely collected information. For instance, most positive COVID-19 samples are not sequenced, so we do not know which variant they are infected with. In this example, we made the simplifying assumption that only a single variant was circulating at any time. However, this is clearly incorrect. Instead, we could couple genomic surveillance data, for instance that reported in [GISAID](https://www.gisaid.org/), to the reported epidemiological incidence to recreate the variant specific incidences, by assuming the variant-specific prevalence in GISAID is proportional to its reported incidence: 
 
@@ -595,7 +595,7 @@ ggplot(multi_var_sim_inc_missing_data, aes(x = date,y = rep_inc_D_noise)) +
   geom_line(aes(y= rep_inc_O_noise), color = "red")
 ```
 
-![](chapter_3_files/figure-html/plot-missing-data-1.png)<!-- -->
+![](assets/chapter_3_files/figure-html/plot-missing-data-1.png)<!-- -->
 
 
 Whereas in R, we can account for missing data as "NA", in Stan missing data cannot be included. Therefore, if we want to fit the model to incidence data where date for certain dates are missing, we need to include an array where we index the dates to be fit. This is similar to seeding the model 1 month prior to fitting, we passed an index to the Stan model telling it at which time point to start fitting the model. 
@@ -603,13 +603,13 @@ Whereas in R, we can account for missing data as "NA", in Stan missing data cann
 ***Challenge: Save *model2_Euler_V2.stan* as a new model and extend it to fit to the incidence data in *multi_var_sim_inc_missing_data*, accounting for the missing data.***
 
 
-## 3. Pre-symptomatic transmission
+### 3. Pre-symptomatic transmission
 
 There is evidence that SARS-CoV-2 transmission occurs prior to the onset of symptoms [3], which we do not account for in our model. 
 
 ***Challenge: First draw out a compartmental model which allows for pre-symptomatic infectiousness. Assume that the average period from exposure to SARS-CoV-2 to the onset of Viraemia is fixed at 1.31 days [3] (so you do not need to estimate any additional parameters). Next, save *model2_deSolve.R*  as a new model and extend it to include pre-symptomatic infectiousness. How does it change the transmission dynamics of the outbreak? Fianlly, save *model2_Euler_V2.stan* as a new model and modify it to include pre-symptomatic infectiousness.***  
 
-# References 
+## References 
 - (1) Mutevedzi PC, Kawonga M, Kwatra G, et al. Estimated SARS-CoV-2 infection rate and fatality risk in Gauteng Province, South Africa: a population-based seroepidemiological survey. Int J Epidemiol 2022; 51(2): 404-17.
 - (2) Tanaka H, Ogata T, Shibata T, et al. Shorter Incubation Period among COVID-19 Cases with the BA.1 Omicron Variant. Int J Environ Res Public Health 2022; 19(10).
 - (3) Lavezzo E, Franchin E, Ciavarella C, et al. Suppression of a SARS-CoV-2 outbreak in the Italian municipality of Vo’. Nature 2020; 584(7821): 425-9.

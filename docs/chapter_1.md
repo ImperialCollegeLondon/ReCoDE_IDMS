@@ -9,12 +9,6 @@ output:
 
 ---
 
-
-
-
-
-  
-
 Hi and welcome to the chapter in this exampler on designing an infectious disease model. The overall aim of this script is to design a Susceptible (S) - Exposed (E) - Infectious (I) - Quarantine (Q) - Recovered (R) model to explore the transmission dynamics of Omicron in Gauteng, South Africa between late 2021 and early 2022. 
 
 
@@ -30,13 +24,11 @@ Some questions include:
 
 **Disclaimer: "all models are wrong. Some models are useful" - George E. P. Box**
 
-# Introduction to infectious disease modelling 
+## Introduction to infectious disease modelling 
 
 First, lets take a look at the storyboard below. It outlines some of the key steps when designing and building a model logically. 
 
-![Designing a compartmental model.] 
-<img src="images/Generic modelling storyboard.png">
-
+![Designing a compartmental model](assets/images/Generic modelling storyboard.png)
 
 Briefly, we need to define (1) our research question, (2) population and time period. Then we need to think about (3) how our model can reproduce the observed data. Are we modelling incidence or prevalence data?
 
@@ -95,11 +87,11 @@ An important thing to note is that although the steps in building a model may ap
 So, now lets design the model. 
 
 
-#  Step 1: Define the reseach question
+###  Step 1: Define the reseach question
 
 There may be multiple questions you want to answer in an analysis, and listing them helps you keep the focus. In this example, one of the key questions is: What is the reproduction number of the Omicron variant of concern?
 
-# Step 2: What is the population and time period?
+### Step 2: What is the population and time period?
 
 This is partly answered by the research question, we are interested in the population of Gauteng and the period of time when Omicron first emerged.The population of Gauteng is 15,810,388 people.
 
@@ -108,12 +100,12 @@ We know that Omicron was first detected in October 2021, but we suspect that the
 We want to explore whether we can reconstruct the dynamics observed in the Omicron wave. If you look at [this](https://covid19.who.int/region/afro/country/za) dashboard provided by the WHO, we can see that this 4th wave was over by ~February. We will run our model till the 23rd of February to make sure we capture all of the epidemic curve. 
 
 
-# Step 3: What data are we fitting the model to?
+### Step 3: What data are we fitting the model to?
 
 We are going to fit to the *reported* incidence of SARS-CoV-2 for Gauteng, South Africa. We need to reconstruct the reported incidence from the model. 
 
 
-# Step 4: What compartments do we minimally need to represent the disease transmission process? 
+### Step 4: What compartments do we minimally need to represent the disease transmission process? 
 
 Starting with the SIR model, we want to account for the [incubation period](https://en.wikipedia.org/wiki/Incubation_period) of COVID-19 and we need to account for only having data on the reported incidence. Therefore, we want to extend the simple SIR model in some way which allows for individuals to either be detected, reported and isolated or not detected, in which case they remain infectious and are not isolated for the whole duration of the infection. 
 
@@ -121,7 +113,7 @@ Starting with the SIR model, we want to account for the [incubation period](http
 **Q2: draw out a compartmental model which accounts for the above**
 **A2: see flow diagram figure below**
 
-# Step 5: What are the initial conditions? What do we want to estimate? What do we want to fix?
+### Step 5: What are the initial conditions? What do we want to estimate? What do we want to fix?
 
 Our population = $N$ = 15810388. We can assume that $E_{t0}$ and $Q_{t0}$ = 0. 
 
@@ -133,10 +125,10 @@ For this tutorial, we will assume that the initial number of infections  $I_{t0}
 
 Finally, $$S_{t0} = N - R_{t0} - I_{t0}$$ 
 
-# Step 6: What are the rate parameters which describe flows between the compartments?
+### Step 6: What are the rate parameters which describe flows between the compartments?
 
 
-![flow diagram]<img src="images/SEIQR comp model.png">
+![flow diagram](assets/images/SEIQR comp model.png)
 
 
 
@@ -145,18 +137,18 @@ Note, $\beta$, $\sigma$ and $\gamma$ are all per capita rates, whereas $\rho$ is
 
 
 
-# Step 7: What are the equations that govern the model?
+### Step 7: What are the equations that govern the model?
 
-![ODE equations]<img src="images/ODE equations.png">
+![ODE equations](assets/images/ODE equations.png)
 
 
 Once you have a flow diagram with rates, writing the equations is simple! Arrows out of a state are subtracted, arrows into a stated are added. A good check is to make sure the equations balance. 
 
-# Step 8: Which parameters can we fix based on the literature?
+### Step 8: Which parameters can we fix based on the literature?
 
 We will assume an average latent period $\frac{1}{\sigma}$ of 3.03 days, as estimated for Omicron [2] and an average infectious period $\frac{1}{\gamma}$ of 4.17 days [3]. 
 
-# Step 9: Which parameters do we need to estimate?
+### Step 9: Which parameters do we need to estimate?
 
 Having fixed the generation time (i.e., $\sigma$ and $\gamma$), we are going to estimate $\beta$ and $\rho$. 
 
@@ -164,7 +156,7 @@ Having fixed the generation time (i.e., $\sigma$ and $\gamma$), we are going to 
 
 **Q3: We want to estimate $\beta$ as it is variant-specific and therefore unknown following the emergence of a new SARS-CoV-2 variant. Estimating $\beta$ allows us to calculate the $R_0$. We need to estimate $\rho$ as the true incidence of SARS-CoV-2 is unobserved, so the level of under-reporting is unknown. Moreover, reporting and detection of cases is dependent on the rate of population testing soit is spatiotemporally heterogeneous**
 
-# Step 10: Do we have any domain knowledge to inform the parameter priors?
+### Step 10: Do we have any domain knowledge to inform the parameter priors?
 
 As stated above, we want to choose weakly informative priors in order to include enough information to regularise the model. 
 
@@ -180,7 +172,7 @@ samp = rbeta(10000,2,8)
 qplot(samp)
 ```
 
-![](chapter_1_files/figure-html/rho-prior-1.png)<!-- -->
+![](assets/chapter_1_files/figure-html/rho-prior-1.png)<!-- -->
 
 
 Another way to explore the shape of distributions is the [distribution zoo](https://ben18785.shinyapps.io/distribution-zoo/), created by Ben Lambert and Fergus Cooper. 
@@ -227,7 +219,7 @@ beta_prior = rnorm(10000,2.2,1)
 qplot(beta_prior)
 ```
 
-![](chapter_1_files/figure-html/beta-prior-1.png)<!-- -->
+![](assets/chapter_1_files/figure-html/beta-prior-1.png)<!-- -->
 
 ```r
 # check values of beta support R0 range 
@@ -252,7 +244,7 @@ qplot(R0_p)
 
 
 
-# Step 11: What is the model likelihood?
+### Step 11: What is the model likelihood?
 
 
 SARS-CoV-2 is known to be overdispersed, so we will use a Negative-Binomial likelihood. We will match the reported incidence data to the reported incidence in our model, which is the rate of entry into the $Q$ compartment. Thus, let  $\mu = \rho \sigma E$. Our likelihood is therefore:
@@ -263,7 +255,7 @@ $$ y \sim NegBin(\mu, \kappa) $$
 This means we need to additionally estimate $\kappa$. We will assume for which we will assume the prior $\kappa \sim exp(0.01)$ which allows for a wide range of values reflecting our uncertainty. 
 
 
-# Step 12: What assumptions have we made?
+### Step 12: What assumptions have we made?
 
 Some of the assumptions include:
 
@@ -274,14 +266,14 @@ Some of the assumptions include:
 * All tested individuals isolate with 100% compliance
 
 
-# The final model 
+## The final model 
 
-![model 1]<img src="images/Omicron model 1 story board.png">
+![model 1](assets/images/Omicron model 1 story board.png)
 
 
 **Now we have designed our first infectious disease model, the next step is to code it up in Stan, which we will do in chapter 2. ** 
 
-# References 
+## References 
 
 
 
