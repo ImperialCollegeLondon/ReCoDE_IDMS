@@ -157,5 +157,3 @@ This folder contains the compartmental models used in part 1.
 - *model2_Euler_V1.stan*: a Stan model of a multistrain SEIQRS model, the ODEs are solved using the Euler method at a user-defined time step. 
 
 - *model2_Euler_V2.stan*: a Stan model of a multistrain SEIQRS model, the ODEs are solved using the Euler method at a user-defined time step. 
-
-## License
