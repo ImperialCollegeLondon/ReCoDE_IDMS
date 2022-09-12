@@ -336,15 +336,258 @@ The fit here is poor, as the model peaks too late. Next we will compare this to 
 **Q6: Using the functions *run_stan_models*, *diagnose_stan_fit* and *plot_model_fit*, fit the compiled model *m1_RK* to the simulated data** 
 
 
+**A6:**
+
+**Looking at *m1_RK*, you can see we need to add some additional data to the list provided to Stan, namely a vector of time steps at which to solve the model.** 
+
+
+```r
+stan_fit_RK = run_stan_models(
+  list_data =
+    list(
+      n_ts = length(all_dates),         # no. time steps 
+      n_pop = n_pop,                    # population
+      n_recov = n_recov,                # recovered population 
+      I0 = n_inf,                       # infection seed
+      y = sim_inc$rep_inc_noise,        # incidence data 
+      n_data = dim(sim_inc)[1],         # no. data 
+      sigma = sigma,                    # latent rate  
+      gamma = gamma,                    # recovery rate 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == date_fit_omicron),  
+      ts = ts                           # time steps  
+    ), 
+  model = m1_RK 
+)
+```
+
+```
+## Time difference of 2.245508 mins
+```
+
+**Diagnostics still look good.**
+
+```r
+RK_diag = diagnose_stan_fit(stan_fit_RK, pars = c("beta", "rho", "R_0"))
+```
+
+![](assets/chapter_2_files/figure-html/diagnose-RK1-1.png)<!-- -->
+
+```r
+RK_diag
+```
+
+```
+## $`markov chain trace plots`
+```
+
+![](assets/chapter_2_files/figure-html/diagnose-RK1-2.png)<!-- -->
+
+```
+## 
+## $`univariate marginal posterior distributions`
+```
+
+![](assets/chapter_2_files/figure-html/diagnose-RK1-3.png)<!-- -->
+
+```
+## 
+## $`summary statistics of parameters`
+##           mean      se_mean         sd      2.5%       25%       50%       75%
+## beta 1.4576613 0.0010627769 0.02235308 1.4174613 1.4425718 1.4550144 1.4719345
+## rho  0.1942493 0.0005025086 0.01051176 0.1754508 0.1872102 0.1932687 0.2013505
+## R_0  4.8967717 0.0006947997 0.02190915 4.8562482 4.8815042 4.8960670 4.9114831
+##          97.5%    n_eff     Rhat
+## beta 1.5076162 442.3749 1.004954
+## rho  0.2166354 437.5868 1.003838
+## R_0  4.9407966 994.3332 1.003822
+```
+
+**The fit is better than the Euler method, although we are not quite capturing the peak of the epidemic curve.**
+
+```r
+RK_plot = plot_model_fit(stan_fit_RK,
+                        variable_model = "lambda",
+                        variable_data = "rep_inc_noise",
+                        data = sim_inc,
+                        all_dates = all_dates)
+
+RK_plot
+```
+
+![](assets/chapter_2_files/figure-html/plot-RK1-1.png)<!-- -->
+
+
+
 **Q7: Which method is fastest? By how much?**
 
+**A7: the Euler method is ~5 x faster**
 
 **Q8: Which method recovers the true parameters with more accuracy?**
+
+**A8: Lets plot our original values, alongside the mean and 95% CrI of the posterior distributions of our estimated parameters, using the function *compare_param_est* **
+  
+
+```r
+compare_param_est(
+  parameter_names = c("beta", "rho", "R_0"), # parameters to compare 
+  true_param_values = c(beta, rho, R0),  # true values
+  param_values1 =  EU_diag[[3]][,c(1,4,8)], # estimated values from model 1 
+  param_values2 =  RK_diag[[3]][,c(1,4,8)]  # estimated values from model 2
+)
+```
+
+```
+## [[1]]
+```
+
+![](assets/chapter_2_files/figure-html/compare-param-1-1.png)<!-- -->
+
+```
+## 
+## [[2]]
+```
+
+![](assets/chapter_2_files/figure-html/compare-param-1-2.png)<!-- -->
+
+```
+## 
+## [[3]]
+```
+
+![](assets/chapter_2_files/figure-html/compare-param-1-3.png)<!-- -->
+
+**It looks like the RK method is better able to recover the parameter values, which makes sense as it fits the date better. The RK method does underestimate the true $R_0$, which explains why the model was not quite able to capture the peak of the epidemic curve.** 
+
+**It is also important to remember that the data are generated using fixed parameter values, whereas in Bayesian modelling we consider parameters to be distributions. This highlights the limitations of using a single simulated data set, how do we decide if the posterior distribution is close enough to the "correct" value? Nevertheless, we can see that the parameter values and model fit estimated by the Euler method are subject to less accurate and subject to more uncertainty. One option we can explore is reducing the time step at which we solve the ODE equations using the Euler method.** 
 
 
 #### Improving the accuracy of the Euler method 
 
 **Q9: Reduce the time step at which *model1_Euler_V1.stan* solves the ODEs to improve the accuracy of the fit. What is the minimum reduction in step size needed to ensure the posterior distribution captures the true parameter value?** 
+
+**A9: *m1_EU2* shows how to modify the original model to allow us to estimate the ODE solutions at a scaled time step, which is smaller than 1 day. We now just need to provide an additional data variable, the amount to scale by.**
+
+**Within the model, we also need to divide all the *rate* parameters by our scaling factor, as $\sigma$ and $\gamma$ are in days. We do this in the transformed data block. **
+
+**Once we have solved the model at our desired resolution, we need to aggregate the reported incidence back into days so that we can fit to the data. This is done in the model block using a for loop which adds to the index as it runs**
+
+
+
+```r
+# run the model 
+
+stan_fit_EU2 = run_stan_models(
+  list_data =
+    list(
+      n_ts = length(all_dates),         # no. time steps 
+      n_pop = n_pop,                    # population
+      n_recov = n_recov,                # recovered population
+      I0 = n_inf,                       # infection seed
+      y = sim_inc$rep_inc_noise,              # incidence data 
+      n_data = dim(sim_inc)[1],         # no. data 
+      sigma = sigma,                    # latent rate  
+      gamma = gamma,                    # recovery rate 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == date_fit_omicron),  
+      scale_time_step = 7               # amount to reduce time step
+    ), 
+  model = m1_EU2 
+)
+```
+
+```
+## Time difference of 1.521639 mins
+```
+
+**Reducing the time step by 6 or 7 should be sufficient, and is still faster than the RK method.**
+
+**Let's check the diagnostics now and see if we are able to improve the accuracy. **
+
+
+```r
+EU2_diag = diagnose_stan_fit(stan_fit_EU2, pars = c("beta", "rho", "R_0"))
+```
+
+![](assets/chapter_2_files/figure-html/diagnose-EU2-1.png)<!-- -->
+
+```r
+EU2_diag
+```
+
+```
+## $`markov chain trace plots`
+```
+
+![](assets/chapter_2_files/figure-html/diagnose-EU2-2.png)<!-- -->
+
+```
+## 
+## $`univariate marginal posterior distributions`
+```
+
+![](assets/chapter_2_files/figure-html/diagnose-EU2-3.png)<!-- -->
+
+```
+## 
+## $`summary statistics of parameters`
+##           mean      se_mean         sd      2.5%       25%       50%       75%
+## beta 1.5300896 0.0011393195 0.02480530 1.4849911 1.5129051 1.5282113 1.5461856
+## rho  0.2132518 0.0005091546 0.01116703 0.1934163 0.2052791 0.2126142 0.2208024
+## R_0  5.0187005 0.0005883898 0.01965081 4.9800628 5.0049975 5.0190336 5.0319124
+##          97.5%     n_eff      Rhat
+## beta 1.5816731  474.0215 0.9991952
+## rho  0.2364666  481.0344 0.9994794
+## R_0  5.0586932 1115.4001 0.9995148
+```
+
+
+
+```r
+EU2_plot = plot_model_fit(stan_fit_EU2,
+                          variable_model = "lambda_days", 
+                          variable_data = "rep_inc_noise",
+                          data = sim_inc,
+                          all_dates = all_dates)
+
+EU2_plot
+```
+
+![](assets/chapter_2_files/figure-html/plot-EU2-1.png)<!-- -->
+
+**Finally, lets compare parameter estimates again**
+
+
+```r
+compare_param_est(
+  parameter_names = c("beta", "rho", "R0"),
+  true_param_values = c(beta, rho, R0),
+  param_values1 =  EU2_diag[[3]][,c(1,4,8)],
+  param_values2 =  RK_diag[[3]][,c(1,4,8)]
+)
+```
+
+```
+## [[1]]
+```
+
+![](assets/chapter_2_files/figure-html/compare-param-2-1.png)<!-- -->
+
+```
+## 
+## [[2]]
+```
+
+![](assets/chapter_2_files/figure-html/compare-param-2-2.png)<!-- -->
+
+```
+## 
+## [[3]]
+```
+
+![](assets/chapter_2_files/figure-html/compare-param-2-3.png)<!-- -->
+
+**This final fit is able to recover our true parameters, although the model doesn't quite capture the peak. However, as the data incorporates additional noise, we would not expect the model to perfectly fit every point, otherwise we would be concerned about over-fitting the model.** 
 
 
 Having compared the two methods fitting to single variant data, in chapter 3 we will look at fitting a more complicated multi-variant model using the Euler method. 

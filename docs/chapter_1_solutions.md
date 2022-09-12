@@ -74,6 +74,7 @@ In infectious disease modelling we often have incidence data, which we may want 
 
 **Q1: If we were to use the Poisson distribution to fit to incidence data, what model output would we fit to?**
 
+**A1: The rate that individuals become infectious, i.e., the rate that they enter the $I$ compartment, $= \beta \frac{I}{N} S$.** 
 
 
 Alternatively, if the data are over-dispersed, that is if the variance is larger than the mean then we might want to use a Negative Binomial likelihood. The Negative Binomial distribution extends the Poisson distribution with an additional parameter $\kappa$ which controls the over-dispersion of the distribution. Critically, the variance is now $> \lambda$. When $\kappa$ is very small, over-dispersion is high, but when $\kappa$ is large enough, the Negative Binomial distribution converges on the Poisson! 
@@ -110,6 +111,7 @@ Starting with the SIR model, we want to account for the [incubation period](http
 
 
 **Q2: draw out a compartmental model which accounts for the above**
+**A2: see flow diagram figure below**
 
 ### Step 5: What are the initial conditions? What do we want to estimate? What do we want to fix?
 
@@ -152,7 +154,7 @@ Having fixed the generation time (i.e., $\sigma$ and $\gamma$), we are going to 
 
 **Q3: why would we want to estimate these parameters?**
 
-
+**Q3: We want to estimate $\beta$ as it is variant-specific and therefore unknown following the emergence of a new SARS-CoV-2 variant. Estimating $\beta$ allows us to calculate the $R_0$. We need to estimate $\rho$ as the true incidence of SARS-CoV-2 is unobserved, so the level of under-reporting is unknown. Moreover, reporting and detection of cases is dependent on the rate of population testing soit is spatiotemporally heterogeneous**
 
 ### Step 10: Do we have any domain knowledge to inform the parameter priors?
 
@@ -163,8 +165,12 @@ One way to achieve this, is to not use hard bounds, unless there are true constr
 
 **Q4: use the function `rbeta()` to check the distribution of $\rho \sim Beta(2,8)$** 
 
+**A4** 
 
-
+```r
+samp = rbeta(10000,2,8)
+qplot(samp)
+```
 
 ![](assets/chapter_1_files/figure-html/rho-prior-1.png)<!-- -->
 
@@ -182,6 +188,59 @@ Intuitively, this is due to the fact that only a proportion $(1-\rho)$ of subjec
 
 
 **Q5: Define a prior for $\beta$ which supports $R_0$ values around 5 but allows for higher values if the data supports it, given $\rho$ values between 0 and 0.5.**
+
+
+**A5**
+
+**$\beta = \frac{R_0 \gamma}{(1-\rho)}$.**
+
+
+```r
+set.seed(12)
+R0 = runif(10000,4,10) # draw randomly 10,000 values between 4 and 10 
+gamma = 1/4.17
+rho = runif(10000,0,0.5) 
+
+# calculate values of beta 
+beta = R0 * gamma / (1-rho) 
+ 
+# 95% quantiles of beta 
+quantile(beta, probs = c(0.025,0.5,0.975)) 
+```
+
+```
+##     2.5%      50%    97.5% 
+## 1.156041 2.236819 4.067416
+```
+
+```r
+# draw from a  normal distribution 
+beta_prior = rnorm(10000,2.2,1)
+qplot(beta_prior)
+```
+
+![](assets/chapter_1_files/figure-html/beta-prior-1.png)<!-- -->
+
+```r
+# check values of beta support R0 range 
+R0_p = (1-rho) * (beta_prior) / gamma
+
+quantile(R0_p,  probs = c(0.025,0.1,0.25, 0.5, 0.75,0.9,0.975))
+```
+
+```
+##       2.5%        10%        25%        50%        75%        90%      97.5% 
+##  0.7447701  2.7193864  4.5400148  6.6724047  9.0758795 11.4707453 14.2731938
+```
+
+```r
+qplot(R0_p)
+```
+
+![](chapter_1_files/figure-html/beta-prior-2.png)<!-- -->
+
+**We can see that $\beta \sim ND(2.2,1)$ supports $R_0$ values mostly between 4 and 10, but allow for extreme values of $R_0$ if the data supports it.** 
+
 
 
 

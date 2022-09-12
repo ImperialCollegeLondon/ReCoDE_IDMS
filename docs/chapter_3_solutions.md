@@ -72,6 +72,8 @@ We are going to estimate the variant-specific transmission rates $\beta_Y$, the 
 
 ***Q1: Why might we want to assume a variant specific reporting probability?***
 
+***A1: There is a lot of evidence that Omicron is milder than Delta[5]. Individuals with infected with the Omicron variant are therefore less likely to have symptoms and test, so we expect increased underreporting of Omicron.***
+
 During the third wave, driven by Delta, interventions were introduced across South Africa between 15-06-21 and 13-09-2021. We will use our model to also estimate the impact of these interventions on transmission. Let $\omega$ be the percentage reduction in transmission due to interventions. We model this impact on transmission as follows: 
 
 $$\beta' = \beta * (1-\omega)$$ 
@@ -87,6 +89,7 @@ $\epsilon \sim ND(0.003,0.001)$.
 
 ***Q2: Given what we know about the impact of interventions on transmission, what prior should we assume for $\omega$?***
 
+***A2: We don't know very much about $\omega$ except that it is bound between 0 and 1. So let's assume $\omega \sim Beta(1,1)$.***
 
 Finally, we need to define our likelihood functions. As before, we assume that SARS-CoV-2 reported incidence is overdispersed and assume a Negative Binomial distribution: 
 
@@ -340,6 +343,8 @@ To help diagnose the problem, we can look at the lp (the log posterior) to try a
 If a model is non-identifiable it means that two values of a parameter are equally likely, for instance because there are two modes in the posterior distribution. In this instance, we would expect to see chains exploring different regions of parameter space and obtaining similar estimates of the log posterior. Conversely, if we see that chains are exploring different parameter values with different log probabilities it suggests one or more of the chains may be stuck in a local mode. 
 
 ***Q3: Looking at the trace plots, do you think the model is non-identifiable or that one or more of the chains are stuck in a local mode?***
+
+***A3: From the trace plot, we can see that chains 1 and 2 are exploring a more probable region of parameter values (i.e., they have a high log probability).***
 
 
 If we plot the model fit against the data, we can see that the model is able to recreate the Delta incidence but only partly captures the Omicron transmission dynamics: 
