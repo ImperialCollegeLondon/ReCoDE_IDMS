@@ -292,14 +292,141 @@ The fit here is poor, as the model peaks too late. Next we will compare this to 
 **Q6: Using the functions *run_stan_models*, *diagnose_stan_fit* and *plot_model_fit*, fit the compiled model *m1_RK* to the simulated data** 
 
 
+**A6:**
+
+**Looking at *m1_RK*, you can see we need to add some additional data to the list provided to Stan, namely a vector of time steps at which to solve the model.** 
+
+```{r fit-RK1}
+stan_fit_RK = run_stan_models(
+  list_data =
+    list(
+      n_ts = length(all_dates),         # no. time steps 
+      n_pop = n_pop,                    # population
+      n_recov = n_recov,                # recovered population 
+      I0 = n_inf,                       # infection seed
+      y = sim_inc$rep_inc_noise,        # incidence data 
+      n_data = dim(sim_inc)[1],         # no. data 
+      sigma = sigma,                    # latent rate  
+      gamma = gamma,                    # recovery rate 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == date_fit_omicron),  
+      ts = ts                           # time steps  
+    ), 
+  model = m1_RK 
+)
+```
+
+**Diagnostics still look good.**
+```{r, label= "diagnose-RK1"}
+RK_diag = diagnose_stan_fit(stan_fit_RK, pars = c("beta", "rho", "R_0"))
+RK_diag
+```
+
+**The fit is better than the Euler method, although we are not quite capturing the peak of the epidemic curve.**
+```{r message=FALSE, warning=FALSE, label= "plot-RK1"}
+RK_plot = plot_model_fit(stan_fit_RK,
+                        variable_model = "lambda",
+                        variable_data = "rep_inc_noise",
+                        data = sim_inc,
+                        all_dates = all_dates)
+
+RK_plot
+```
+
+
+
 **Q7: Which method is fastest? By how much?**
 
+**A7: the Euler method is ~5 x faster**
 
 **Q8: Which method recovers the true parameters with more accuracy?**
+
+**A8: Lets plot our original values, alongside the mean and 95% CrI of the posterior distributions of our estimated parameters, using the function *compare_param_est* **
+  
+```{r message=FALSE, warning=FALSE, label= "compare-param-1"}
+compare_param_est(
+  parameter_names = c("beta", "rho", "R_0"), # parameters to compare 
+  true_param_values = c(beta, rho, R0),  # true values
+  param_values1 =  EU_diag[[3]][,c(1,4,8)], # estimated values from model 1 
+  param_values2 =  RK_diag[[3]][,c(1,4,8)]  # estimated values from model 2
+)
+
+```
+
+**It looks like the RK method is better able to recover the parameter values, which makes sense as it fits the date better. The RK method does underestimate the true $R_0$, which explains why the model was not quite able to capture the peak of the epidemic curve.** 
+
+**It is also important to remember that the data are generated using fixed parameter values, whereas in Bayesian modelling we consider parameters to be distributions. This highlights the limitations of using a single simulated data set, how do we decide if the posterior distribution is close enough to the "correct" value? Nevertheless, we can see that the parameter values and model fit estimated by the Euler method are subject to less accurate and subject to more uncertainty. One option we can explore is reducing the time step at which we solve the ODE equations using the Euler method.** 
 
 
 ### Improving the accuracy of the Euler method 
 
 **Q9: Reduce the time step at which *model1_Euler_V1.stan* solves the ODEs to improve the accuracy of the fit. What is the minimum reduction in step size needed to ensure the posterior distribution captures the true parameter value?** 
+
+**A9: *m1_EU2* shows how to modify the original model to allow us to estimate the ODE solutions at a scaled time step, which is smaller than 1 day. We now just need to provide an additional data variable, the amount to scale by.**
+
+**Within the model, we also need to divide all the *rate* parameters by our scaling factor, as $\sigma$ and $\gamma$ are in days. We do this in the transformed data block. **
+
+**Once we have solved the model at our desired resolution, we need to aggregate the reported incidence back into days so that we can fit to the data. This is done in the model block using a for loop which adds to the index as it runs**
+
+
+```{r, label= "fit-EU2"}
+
+# run the model 
+
+stan_fit_EU2 = run_stan_models(
+  list_data =
+    list(
+      n_ts = length(all_dates),         # no. time steps 
+      n_pop = n_pop,                    # population
+      n_recov = n_recov,                # recovered population
+      I0 = n_inf,                       # infection seed
+      y = sim_inc$rep_inc_noise,              # incidence data 
+      n_data = dim(sim_inc)[1],         # no. data 
+      sigma = sigma,                    # latent rate  
+      gamma = gamma,                    # recovery rate 
+      time_seed_omicron =               # index seed omicron
+        which(all_dates == date_fit_omicron),  
+      scale_time_step = 7               # amount to reduce time step
+    ), 
+  model = m1_EU2 
+)
+
+
+```
+
+**Reducing the time step by 6 or 7 should be sufficient, and is still faster than the RK method.**
+
+**Let's check the diagnostics now and see if we are able to improve the accuracy. **
+
+```{r, label= "diagnose-EU2"}
+EU2_diag = diagnose_stan_fit(stan_fit_EU2, pars = c("beta", "rho", "R_0"))
+
+EU2_diag
+```
+
+
+```{r message=FALSE, warning=FALSE, label= "plot-EU2"}
+EU2_plot = plot_model_fit(stan_fit_EU2,
+                          variable_model = "lambda_days", 
+                          variable_data = "rep_inc_noise",
+                          data = sim_inc,
+                          all_dates = all_dates)
+
+EU2_plot
+```
+
+**Finally, lets compare parameter estimates again**
+
+```{r message=FALSE, warning=FALSE, label= "compare-param-2"}
+compare_param_est(
+  parameter_names = c("beta", "rho", "R0"),
+  true_param_values = c(beta, rho, R0),
+  param_values1 =  EU2_diag[[3]][,c(1,4,8)],
+  param_values2 =  RK_diag[[3]][,c(1,4,8)]
+)
+```
+
+**This final fit is able to recover our true parameters, although the model doesn't quite capture the peak. However, as the data incorporates additional noise, we would not expect the model to perfectly fit every point, otherwise we would be concerned about over-fitting the model.** 
+
 
 Having compared the two methods fitting to single variant data, in chapter 3 we will look at fitting a more complicated multi-variant model using the Euler method. 
